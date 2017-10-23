@@ -27,17 +27,17 @@
         </v-list>
         <div class="text-xs-center page">
           <v-pagination :length="totalPage" v-model="page" :total-visible="5"></v-pagination>
-        </div>  
+        </div>
         <div class="bottomGroup">
+          <div style="font-size:120%">{{ templateName }}</div>
           <div class="headline red--text templateTitle">作图模板</div>
-          <div class="templateTitle">
-            <form class="uploadTemplate" id="fileForm2">
-              <input style="width:3px" type="file" name="files" @change='uploadTemplate'>
-            </form>
-            <v-btn icon v-tooltip:top="{ html:'上传'}" class="indigo--text"><v-icon>file_upload</v-icon></v-btn>
-          </div>
-          <v-btn icon v-tooltip:top="{ html:'下载'}" class="indigo--text"><v-icon>file_download</v-icon><a class="download" href="http://172.22.0.34:8080/yqzc/download">下载模板</a></v-btn>            
-        </div>        
+          <v-btn @click="emitInputFile" icon v-tooltip:top="{ html:'上传'}" class="indigo--text"><v-icon>file_upload</v-icon></v-btn>
+          <a href="http://172.22.0.34:8080/yqzc/download"><v-btn icon v-tooltip:top="{ html:'下载'}" class="indigo--text"><v-icon>file_download</v-icon></v-btn></a>           
+        </div>
+        <form class="uploadTemplate" id="fileForm2">
+          <input style="width:3px" type="file" id="files" name="files" @change='uploadTemplate'>
+        </form>
+        <img src="../assets/pic.png" style="width:100%">       
       </v-navigation-drawer>
       <main>
         <v-container fluid>
@@ -45,13 +45,13 @@
             <form id="allForm">
               <v-layout>
                 <v-flex md2>
-                  <v-select :disabled="disabledVal" @change="yearMonthChange(index)" :items="yearItems" v-model="historicalData[index].current_year" label="年"></v-select>
+                  <v-select :disabled="disabledVal || ymDisableVal" @change="yearMonthChange(index)" :items="yearItems" v-model="historicalData[index].current_year" label="年"></v-select>
                 </v-flex>
                 <v-flex md2 style="margin-left:20px;">
-                  <v-select :disabled="disabledVal" @change="yearMonthChange(index)" :items="monthItems" v-model="historicalData[index].journel_month" label="月份"></v-select>
+                  <v-select :disabled="disabledVal || ymDisableVal" @change="yearMonthChange(index)" :items="monthItems" v-model="historicalData[index].journel_month" label="月份"></v-select>
                 </v-flex>
                 <v-flex md2 style="margin-left:20px;">
-                  <v-text-field :disabled="disabledVal" label="作者" v-model="historicalData[index].editor"></v-text-field>
+                  <v-text-field :disabled="disabledVal" label="编辑" v-model="historicalData[index].editor"></v-text-field>
                 </v-flex>
                 <v-flex offset-md1>
                   <v-btn primary @click="createTable">新建报表</v-btn>
@@ -62,11 +62,11 @@
               <div class="afterTop"><span>通报第 {{ historicalData[index].journel_all_idt }} 期</span> <span style="margin-left:15px">简报第 {{ historicalData[index].journel_all_idj }} 期</span></div>
               <v-card style="margin-bottom:30px">
                 <v-toolbar style="background-color:rgb(25,118,210)"><v-card-title><span class="headline white--text">信息上报工作概况</span></v-card-title></v-toolbar>
-                <v-card-title><h6>承担专项任务情况</h6></v-card-title>
+                <v-card-title style="margin-left:15px"><h6>完成专项情况</h6></v-card-title>
                 <v-flex md10 offset-md1>
                   <v-text-field multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].finish_status"></v-text-field>
                 </v-flex>
-                <v-card-title><h6>向中办、国办、中央国安办上报信息情况</h6></v-card-title>
+                <v-card-title style="margin-left:15px"><h6>向中办、国办、中央国安办上报信息情况</h6></v-card-title>
                 <v-flex offset-md1>
                   <v-layout wrap>
                     <v-flex class="text" md3>
@@ -110,7 +110,7 @@
                     </v-flex>
                   </v-layout>              
                 </v-flex>
-                <v-card-title><h6>向工信部上报信息情况</h6></v-card-title>
+                <v-card-title style="margin-left:15px"><h6>向工信部上报信息情况</h6></v-card-title>
                 <v-flex offset-md1>
                   <v-layout wrap>
                     <v-flex class="text" md3>
@@ -130,7 +130,7 @@
                     </v-flex>
                   </v-layout>              
                 </v-flex>
-                <v-card-title><h6>向其他重要部门报送信息情况</h6></v-card-title>
+                <v-card-title style="margin-left:15px"><h6>向其他重要部门报送信息情况</h6></v-card-title>
                 <v-flex offset-md1>
                   <v-layout wrap>
                     <v-flex class="text" md2>
@@ -167,7 +167,7 @@
                     </v-flex>
                   </v-layout>                
                 </v-flex>
-                <v-card-title><h6>向中心领导及其他处室报送信息情况</h6></v-card-title>
+                <v-card-title style="margin-left:15px"><h6>向中心领导及其他处室报送信息情况</h6></v-card-title>
                 <v-flex offset-md1>
                   <v-layout>
                     <v-flex class="text" md3>
@@ -188,19 +188,16 @@
                   <v-text-field label="手段建设情况（总结）" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].system_test_status_sum"></v-text-field>
                 </v-flex>
               </v-card>
-              <v-card style="margin-bottom:30px">
-                <v-toolbar style="background-color:rgb(25,118,210)"><v-card-title><span class="headline white--text">业务指导情况</span></v-card-title></v-toolbar>
-                <v-card-title><h6>中办双周研判会情况</h6></v-card-title>
-                <v-flex class="text" md10 offset-md1>
-                  <v-text-field multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_research_status"></v-text-field>
+              <v-card style="margin-bottom:30px;">
+                <v-toolbar style="background-color:rgb(25,118,210)"><v-card-title><span class="headline white--text">业务管理情况</span></v-card-title></v-toolbar>
+                <v-flex class="text" md10 offset-md1 style="margin-top:15px">
+                  <v-text-field label="中办双周研判会情况" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_research_status"></v-text-field>
                 </v-flex>
-                <v-card-title><h6>分中心跟班学习情况</h6></v-card-title>
                 <v-flex class="text" md10 offset-md1>
-                  <v-text-field multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_learn_status"></v-text-field>
+                  <v-text-field label="分中心跟班学习情况" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_learn_status"></v-text-field>
                 </v-flex>
-                <v-card-title><h6>分中心视频培训情况</h6></v-card-title>
                 <v-flex class="text" md10 offset-md1>
-                  <v-text-field multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_train_status"></v-text-field>
+                  <v-text-field label="分中心视频培训情况" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_train_status"></v-text-field>
                 </v-flex>
               </v-card>
               <v-card style="margin-bottom:30px">
@@ -242,6 +239,16 @@
           </div>
         </v-container>
       </main>
+      <!-- 弹出框 -->
+      <v-dialog v-model="dialog" width="50%">
+        <v-card>
+          <v-card-title><span class="headline">确认删除吗？</span></v-card-title>
+          <div style="text-align:right">
+            <v-btn @click.native.stop="dialog = false" @click="confirmDelete" primary>确认</v-btn>
+            <v-btn @click.native.stop="dialog = false" error @click="deleteIndex = -1">取消</v-btn>
+          </div>
+        </v-card>
+      </v-dialog>
     </v-app>
 </template>
 
@@ -264,14 +271,21 @@ export default {
       showIndex: 0,
       drawer: true,
       disabledVal: true,
+      ymDisableVal: true,
       page: 1,
       totalPage: 0,
       fileList: [],
       file: '',
-      yearItems: []
+      yearItems: [],
+      dialog: false,
+      templateName: '',
+      deleteIndex: -1
     }
   },
   methods: {
+    emitInputFile () {
+      $('#fileForm2 input').click()
+    },
     yearMonthChange (index) {
       let tempThis = this
       setTimeout(async function () {
@@ -360,8 +374,8 @@ export default {
     },
     submitForm (index) {
       let path = document.getElementById('fileForm')[0].value
-      if (!path.match(/\.doc$|\.docx$|\.ppt$|\.pptx$/)) {
-        alert('请上传正确格式的文件！(.ppt 或 .pptx 或 .doc 或 .docx)')
+      if (!path.match(/\.doc$|\.docx$/)) {
+        alert('请上传正确格式的文件！(.doc 或 .docx)')
         return
       }
       let formData = new FormData(document.getElementById('fileForm'))
@@ -401,22 +415,27 @@ export default {
     hisClick (index) {
       this.showIndex = index
       this.disabledVal = true
+      this.ymDisableVal = true
     },
     deleteHis (index) {
-      if (this.historicalData[index].id === null) {
-        this.historicalData.splice(index, 1)
+      this.dialog = true
+      this.deleteIndex = index
+    },
+    confirmDelete () {
+      if (this.historicalData[this.deleteIndex].id === null) {
+        this.historicalData.splice(this.deleteIndex, 1)
         return
       }
       $.ajax({
         type: 'post',
         url: 'http://172.22.0.34:8080/yqzc/delete',
-        data: this.historicalData[index],
+        data: this.historicalData[this.deleteIndex],
         async: false,
         success: function (data) {
           temp = JSON.parse(data)
         }
       })
-      if (temp.result === 'success') this.historicalData.splice(index, 1)
+      if (temp.result === 'success') this.historicalData.splice(this.deleteIndex, 1)
       temp = ''
       this.refresh()
     },
@@ -494,6 +513,7 @@ export default {
       }
     },
     uploadTemplate () {
+      let tempThis = this
       let path = document.getElementById('fileForm2')[0].value
       if (!path.match(/\.ppt$|\.pptx$/)) {
         alert('请上传正确格式的文件！(.ppt 或 .pptx)')
@@ -524,6 +544,7 @@ export default {
       this.disabledVal = true
     },
     createTable () {
+      this.ymDisableVal = false
       let a = new Date()
       this.historicalData.unshift({
         id: '',
@@ -584,6 +605,7 @@ export default {
     async refresh () {
       let res = await axios.get(`http://172.22.0.34:8080/yqzc/query?page=${this.page}&state=${this.state}`)
       this.historicalData = res.data.data.yqzc_work_report
+      this.templateName = res.data.data.template
       this.totalPage = Math.ceil(res.data.data.count / 10)
       for (let i = 0; i < res.data.data.yqzc_work_report.length; i++) {
         Vue.set(this.historicalData[i], 'title', '')
@@ -626,6 +648,7 @@ export default {
       this.yearItems.push(2000 + i)
     }
     let res = await axios.get('http://172.22.0.34:8080/yqzc/query?page=1&state=0')
+    this.templateName = res.data.data.template
     this.historicalData = res.data.data.yqzc_work_report
     this.totalPage = Math.ceil(res.data.data.count / 10)
     for (let i = 0; i < res.data.data.yqzc_work_report.length; i++) {
@@ -694,9 +717,7 @@ a{
 }
 .uploadTemplate{
   position: absolute;
-  top: 1px;
-  z-index: 99;
-  width: 1px;
+  width: 0px;
   opacity: 0;
 }
 .afterTop{
