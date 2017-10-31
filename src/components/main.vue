@@ -28,16 +28,18 @@
         <div class="text-xs-center page">
           <v-pagination :length="totalPage" v-model="page" :total-visible="5"></v-pagination>
         </div>
-        <div class="bottomGroup">
-          <div style="font-size:120%">{{ templateName }}</div>
-          <div class="headline red--text templateTitle">作图模板</div>
-          <v-btn @click="emitInputFile" icon v-tooltip:top="{ html:'上传'}" class="indigo--text"><v-icon>file_upload</v-icon></v-btn>
-          <a href="http://172.22.0.34:8080/yqzc/download"><v-btn icon v-tooltip:top="{ html:'下载'}" class="indigo--text"><v-icon>file_download</v-icon></v-btn></a>           
+        <div class="bottomBar">
+          <img src="../assets/pic.png" style="width:100%;margin-top:20px;">       
+          <div class="bottomGroup">
+            <div style="font-size:120%">{{ templateName }}</div>
+            <div class="headline red--text templateTitle">作图模板</div>
+            <v-btn @click="emitInputFile" icon v-tooltip:top="{ html:'上传'}" class="indigo--text"><v-icon>file_upload</v-icon></v-btn>
+            <a :href="[path + '/download']"><v-btn icon v-tooltip:top="{ html:'下载'}" class="indigo--text"><v-icon>file_download</v-icon></v-btn></a>           
+          </div>
+          <form class="uploadTemplate" id="fileForm2">
+            <input style="width:3px" type="file" id="files" name="files" @change='uploadTemplate'>
+          </form>
         </div>
-        <form class="uploadTemplate" id="fileForm2">
-          <input style="width:3px" type="file" id="files" name="files" @change='uploadTemplate'>
-        </form>
-        <img src="../assets/pic.png" style="width:100%">       
       </v-navigation-drawer>
       <main>
         <v-container fluid>
@@ -51,15 +53,16 @@
                   <v-select :disabled="disabledVal || ymDisableVal" @change="yearMonthChange(index)" :items="monthItems" v-model="historicalData[index].journel_month" label="月份"></v-select>
                 </v-flex>
                 <v-flex md2 style="margin-left:20px;">
-                  <v-text-field :disabled="disabledVal" label="编辑" v-model="historicalData[index].editor"></v-text-field>
+                  <v-text-field :disabled="disabledVal" label="编辑人" v-model="historicalData[index].editor"></v-text-field>
                 </v-flex>
-                <v-flex offset-md1>
+                <v-flex offset-md2>
                   <v-btn primary @click="createTable">新建报表</v-btn>
-                  <a :href="['http://172.22.0.34:8080/yqzc/export?cid='+historicalData[index].id+'&type=jb']"><v-btn primary>导出简报</v-btn></a>
-                  <a :href="['http://172.22.0.34:8080/yqzc/export?cid='+historicalData[index].id+'&type=tb']"><v-btn primary>导出通报</v-btn></a>
+                  <v-btn primary @click="exportTable(index)">导出简报</v-btn>
+                  <router-link to="/instruction"><span class="indigo--text" style="color:black;font-size:110%;margin-left:10px">使用说明</span></router-link>
+                  <a class="export" :href="[path + '/export?cid='+historicalData[index].id+'&type=jb']"></a>
                 </v-flex>
               </v-layout>
-              <div class="afterTop"><span>通报第 {{ historicalData[index].journel_all_idt }} 期</span> <span style="margin-left:15px">简报第 {{ historicalData[index].journel_all_idj }} 期</span></div>
+              <div class="afterTop"><span style="margin-left:15px">简报第 {{ historicalData[index].journel_all_idj }} 期</span></div>
               <v-card style="margin-bottom:30px">
                 <v-toolbar style="background-color:rgb(25,118,210)"><v-card-title><span class="headline white--text">信息上报工作概况</span></v-card-title></v-toolbar>
                 <v-card-title style="margin-left:15px"><h6>完成专项情况</h6></v-card-title>
@@ -73,10 +76,13 @@
                       <v-text-field :disabled="disabledVal" label="《互联网信息专报》（期）" v-model="historicalData[index].central_periodicals"></v-text-field>              
                     </v-flex>
                     <v-flex class="text" md3>
-                      <v-text-field :disabled="disabledVal" label="上报信息（条）" v-model="historicalData[index].central_information"></v-text-field>              
+                      <v-text-field :disabled="disabledVal" label="上报信息总量（条）" v-model="historicalData[index].central_information"></v-text-field>              
                     </v-flex>
                     <v-flex class="text" md3>
                       <v-text-field :disabled="disabledVal" label="国办约稿（件）" v-model="historicalData[index].general_assign"></v-text-field>
+                    </v-flex>
+                    <v-flex class="text" md3>
+                      <v-text-field :disabled="disabledVal" label="中办约稿（件）" v-model="historicalData[index].central_assign"></v-text-field>              
                     </v-flex>
                     <v-flex class="text" md3>
                       <v-text-field :disabled="disabledVal" label="中办采用（条）" v-model="historicalData[index].central_adopt"></v-text-field>              
@@ -85,16 +91,13 @@
                       <v-text-field :disabled="disabledVal" label="中办批示（条）" v-model="historicalData[index].central_comment"></v-text-field>              
                     </v-flex>
                     <v-flex class="text" md3>
-                      <v-text-field :disabled="disabledVal" label="中办约稿（件）" v-model="historicalData[index].central_assign"></v-text-field>              
-                    </v-flex>
-                    <v-flex class="text" md3>
                       <v-text-field :disabled="disabledVal" label="国安办约稿（件）" v-model="historicalData[index].national_security_assign"></v-text-field>
                     </v-flex>
                     <v-flex class="text" md3>
-                      <v-text-field :disabled="disabledVal" label="国安办推送信息（条）" v-model="historicalData[index].national_security_push"></v-text-field>
+                      <v-text-field :disabled="disabledVal" label="国安办推送（条）" v-model="historicalData[index].national_security_push"></v-text-field>
                     </v-flex>
                     <v-flex class="text" md3>
-                      <v-text-field :disabled="disabledVal" label="国安办批示量（条）" v-model="historicalData[index].national_security_comment"></v-text-field>
+                      <v-text-field :disabled="disabledVal" label="国安办批示（条）" v-model="historicalData[index].national_security_comment"></v-text-field>
                     </v-flex>
                     <v-flex class="text" md10>
                       <v-text-field :disabled="disabledVal"  label="典型信息标题（中央国安办）" v-model="historicalData[index].national_security_abstract"></v-text-field>
@@ -114,7 +117,7 @@
                 <v-flex offset-md1>
                   <v-layout wrap>
                     <v-flex class="text" md3>
-                      <v-text-field :disabled="disabledVal"  label="《互联网信息专报》(部)专报出刊（期）" v-model="historicalData[index].ministry_periodicals"></v-text-field>
+                      <v-text-field :disabled="disabledVal"  label="《互联网信息专报》(部)出刊（期）" v-model="historicalData[index].ministry_periodicals"></v-text-field>
                     </v-flex>
                     <v-flex class="text" md2>
                       <v-text-field :disabled="disabledVal"  label="综合研究出刊（篇）" v-model="historicalData[index].ministry_research_material"></v-text-field>
@@ -182,9 +185,6 @@
               <v-card style="margin-bottom:30px">
                 <v-toolbar style="background-color:rgb(25,118,210)"><v-card-title><span class="headline white--text">手段建设情况</span></v-card-title></v-toolbar>
                 <v-flex style="padding:20px;" class="text" md10 offset-md1>
-                  <v-text-field label="手段建设情况（通报）" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].system_test_status"></v-text-field>
-                </v-flex>
-                <v-flex style="padding:20px;" class="text" md10 offset-md1>
                   <v-text-field label="手段建设情况（总结）" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].system_test_status_sum"></v-text-field>
                 </v-flex>
               </v-card>
@@ -194,10 +194,10 @@
                   <v-text-field label="中办双周研判会情况" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_research_status"></v-text-field>
                 </v-flex>
                 <v-flex class="text" md10 offset-md1>
-                  <v-text-field label="分中心跟班学习情况" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_learn_status"></v-text-field>
+                  <v-text-field label="业务培训情况" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_train_status"></v-text-field>
                 </v-flex>
                 <v-flex class="text" md10 offset-md1>
-                  <v-text-field label="分中心视频培训情况" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_train_status"></v-text-field>
+                  <v-text-field label="分中心跟班学习情况" multi-line :disabled="disabledVal"  multi-line v-model="historicalData[index].manage_learn_status"></v-text-field>
                 </v-flex>
               </v-card>
               <v-card style="margin-bottom:30px">
@@ -259,6 +259,8 @@ import _ from 'lodash'
 import $ from 'jquery'
 
 var temp = ''
+let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc'
+// path = 'http://172.22.0.34:8080/yqzc'
 
 export default {
   name: 'main',
@@ -273,13 +275,14 @@ export default {
       disabledVal: true,
       ymDisableVal: true,
       page: 1,
-      totalPage: 0,
+      totalPage: 1,
       fileList: [],
       file: '',
-      yearItems: [],
+      yearItems: [2017, 2018, 2019, 2020],
       dialog: false,
       templateName: '',
-      deleteIndex: -1
+      deleteIndex: -1,
+      path: path
     }
   },
   methods: {
@@ -290,7 +293,7 @@ export default {
       let tempThis = this
       setTimeout(async function () {
         if (tempThis.historicalData[tempThis.showIndex].journel_month) {
-          let res = await axios.get(`http://172.22.0.34:8080/yqzc/verify?year=${tempThis.historicalData[index].current_year}&month=${tempThis.historicalData[index].journel_month}`)
+          let res = await axios.get(`${path}/verify?year=${tempThis.historicalData[index].current_year}&month=${tempThis.historicalData[index].journel_month}`)
           if (res.data.data.yqzc_work_report) {
             tempThis.historicalData[tempThis.showIndex] = res.data.data.yqzc_work_report
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'title', '')
@@ -301,7 +304,7 @@ export default {
             tempThis.historicalData[tempThis.showIndex].webAttachment2 = tempThis.historicalData[tempThis.showIndex].webAttachment.map(function (item) {
               let name = item.match(/\d_.+\.doc$|_.+\.docx$|_.+\.ppt$|_.+\.pptx$/)
               if (name) {
-                return { name: name[0].substr(2), url: 'http://172.22.0.34:8080/yqzc/downattachment?filename=' + name[0].substr(2) }
+                return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
               }
             })
             tempThis.historicalData[tempThis.showIndex].nextAttention = res.data.data.yqzc_work_report.next_attention.split('::')
@@ -315,7 +318,7 @@ export default {
             let tempMonth = tempThis.historicalData[tempThis.showIndex].journel_month
             if (tempThis.historicalData[0].title === '新建报表') tempThis.historicalData.shift()
             tempThis.historicalData.unshift({
-              id: 'null',
+              id: '0',
               nextAttention: [''],
               system_test_status_sum: '',
               attachment: '',
@@ -331,8 +334,6 @@ export default {
               emergency_periodicals: '',
               finish_status: '',
               general_assign: '',
-              journel_year_idt: res.data.data.journel_info.journel_year_idt,
-              journel_all_idt: res.data.data.journel_info.journel_all_idt,
               journel_year_idj: res.data.data.journel_info.journel_year_idj,
               journel_all_idj: res.data.data.journel_info.journel_all_idj,
               journel_month: tempMonth,
@@ -359,7 +360,6 @@ export default {
               other_superme_law: '',
               other_telecom: '',
               other_telecom_count: '',
-              system_test_status: '',
               title: '新建报表',
               zx_info_count: '',
               zx_jw_count: '',
@@ -380,7 +380,7 @@ export default {
       }
       let formData = new FormData(document.getElementById('fileForm'))
       $.ajax({
-        url: 'http://172.22.0.34:8080/yqzc/upload',
+        url: path + '/upload',
         type: 'post',
         data: formData,
         async: false,
@@ -397,7 +397,7 @@ export default {
       this.historicalData[index].webAttachment2 = this.historicalData[index].webAttachment.map(function (item) {
         let name = item.match(/\d_.+\.doc$|_.+\.docx$|_.+\.ppt$|_.+\.pptx$/)
         if (name) {
-          return { name: name[0].substr(2), url: 'http://172.22.0.34:8080/yqzc/downattachment?filename=' + name[0].substr(2) }
+          return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
         }
       })
       temp = ''
@@ -428,7 +428,7 @@ export default {
       }
       $.ajax({
         type: 'post',
-        url: 'http://172.22.0.34:8080/yqzc/delete',
+        url: path + '/delete',
         data: this.historicalData[this.deleteIndex],
         async: false,
         success: function (data) {
@@ -440,6 +440,10 @@ export default {
       this.refresh()
     },
     save (index) {
+      if (this.historicalData[index].journel_month === '') {
+        alert('请填写月份！')
+        return
+      }          
       for (let i = 0; i < this.historicalData[index].webAttachment.length; i++) {
         if (this.historicalData[index].webAttachment[i] === '') this.historicalData[index].webAttachment.splice(i, 1)
       }
@@ -447,15 +451,11 @@ export default {
       this.historicalData[index].attachment = this.historicalData[index].webAttachment.join('::')
       let formData = new FormData()
       for (var i in this.historicalData[index]) {
-        if (this.historicalData[index][i] !== 'null') formData.append(i.toString(), this.historicalData[index][i].toString())
-        if (this.historicalData[index][i] === '' && i !== 'attachment') {
-          alert('保存失败，所有空格均为必填项！')
-          return
-        }
+        if (this.historicalData[index][i] !== null && this.historicalData[index][i] !== 'null') formData.append(i.toString(), this.historicalData[index][i].toString())
       }
       $.ajax({
         async: false,
-        url: 'http://172.22.0.34:8080/yqzc/add',
+        url: path + '/add',
         method: 'POST',
         processData: false,
         contentType: false,
@@ -467,6 +467,7 @@ export default {
         }
       })
       if (temp.result === 'success') {
+        this.ymDisableVal = true
         this.disabledVal = true
         temp = ''
         this.refresh()
@@ -483,15 +484,16 @@ export default {
       this.historicalData[index].attachment = this.historicalData[index].webAttachment.join('::')
       let formData = new FormData()
       for (var i in this.historicalData[index]) {
-        if (this.historicalData[index][i] !== 'null') formData.append(i.toString(), this.historicalData[index][i].toString())
+        if (this.historicalData[index][i] !== null) formData.append(i.toString(), this.historicalData[index][i].toString())
         if (this.historicalData[index][i] === '' && i !== 'attachment') {
-          alert('保存失败，所有空格均为必填项！')
+          this.historicalData[index].is_submit = false
+          alert('提交失败，所有空格均为必填项！')
           return
         }
       }
       $.ajax({
         async: false,
-        url: 'http://172.22.0.34:8080/yqzc/add',
+        url: path + '/add',
         method: 'POST',
         processData: false,
         contentType: false,
@@ -502,9 +504,9 @@ export default {
           console.log(data)
         }
       })
-      console.log(temp)
       if (temp.result === 'success') {
         this.disabledVal = true
+        this.ymdisabledVal = true
         temp = ''
         this.refresh()
       } else {
@@ -521,15 +523,17 @@ export default {
       }
       var formData = new FormData(document.getElementById('fileForm2'))
       $.ajax({
-        url: 'http://172.22.0.34:8080/yqzc/upload',
+        url: path + '/upload',
         type: 'post',
         data: formData,
         async: false,
         contentType: false,
         processData: false,
-        success: function (data) {
+        success: async function (data) {
           let res = JSON.parse(data)
           if (res.result === 'success') {
+            let res2 = await axios.get( path + '/query?page=1&state=0')
+            tempThis.templateName = res2.data.data.template
             alert('上传成功!')
           } else {
             alert('上传失败!')
@@ -547,7 +551,7 @@ export default {
       this.ymDisableVal = false
       let a = new Date()
       this.historicalData.unshift({
-        id: '',
+        id: '0',
         nextAttention: [''],
         system_test_status_sum: '',
         attachment: '',
@@ -564,8 +568,6 @@ export default {
         finish_status: '',
         general_assign: '',
         is_submit: false,
-        journel_year_idt: 0,
-        journel_all_idt: 0,
         journel_year_idj: 0,
         journel_all_idj: 0,
         journel_month: '',
@@ -592,7 +594,6 @@ export default {
         other_superme_law: '',
         other_telecom: '',
         other_telecom_count: '',
-        system_test_status: '',
         title: '新建报表',
         zx_info_count: '',
         zx_jw_count: '',
@@ -603,20 +604,27 @@ export default {
       this.disabledVal = false
     },
     async refresh () {
-      let res = await axios.get(`http://172.22.0.34:8080/yqzc/query?page=${this.page}&state=${this.state}`)
-      this.historicalData = res.data.data.yqzc_work_report
+      let res = await axios.get(`${path}/query?page=${this.page}&state=${this.state}`)
+      this.historicalData = res.data.data.yqzc_work_report      
       this.templateName = res.data.data.template
       this.totalPage = Math.ceil(res.data.data.count / 10)
+      if (res.data.data.yqzc_work_report.length === 0) {
+        this.totalPage = 1
+        this.createTable()
+        return
+      }
       for (let i = 0; i < res.data.data.yqzc_work_report.length; i++) {
         Vue.set(this.historicalData[i], 'title', '')
         Vue.set(this.historicalData[i], 'nextAttention', '')
         Vue.set(this.historicalData[i], 'webAttachment', '')
         Vue.set(this.historicalData[i], 'webAttachment2', '')
-        this.historicalData[i].webAttachment = res.data.data.yqzc_work_report[i].attachment.split('::')
+        if ( res.data.data.yqzc_work_report[i].attachment === null ) this.historicalData[i].attachment = ''
+        if ( res.data.data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
+        this.historicalData[i].webAttachment = this.historicalData[i].attachment.split('::')
         this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
           let name = item.match(/\d_.+\.doc$|_.+\.docx$|_.+\.ppt$|_.+\.pptx$/)
           if (name) {
-            return { name: name[0].substr(2), url: 'http://172.22.0.34:8080/yqzc/downattachment?filename=' + name[0].substr(2) }
+            return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
           }
         })
         this.historicalData[i].nextAttention = res.data.data.yqzc_work_report[i].next_attention.split('::')
@@ -626,6 +634,15 @@ export default {
     deleteAttachment (index, index2) {
       this.historicalData[index].webAttachment.splice(index2, 1)
       this.historicalData[index].webAttachment2.splice(index2, 1)
+    },
+    exportTable (index) {
+      for (var i in this.historicalData[index]) {
+        if (this.historicalData[index][i] === null || this.historicalData[index][i] === '' && i !== 'attachment') {
+          alert('导出失败，所有空格均为必填项！')
+          return
+        }
+      }
+      $('.export')[0].click()
     }
   },
   computed: {
@@ -641,13 +658,19 @@ export default {
     condition: _.debounce(async function () {
       this.page = 1
       this.refresh()
-    }, 100)
+    }, 100),
+    historicalData: function () {
+      if (this.historicalData.length > 8) {
+        this.historicalData.splice(8)
+      }
+    }
   },
   created: async function () {
-    for (let i = 0; i < 30; i++) {
-      this.yearItems.push(2000 + i)
+    let res = await axios.get(path + '/query?page=1&state=0')
+    if (res.data.data.yqzc_work_report.length === 0) {
+      this.createTable()
+      return
     }
-    let res = await axios.get('http://172.22.0.34:8080/yqzc/query?page=1&state=0')
     this.templateName = res.data.data.template
     this.historicalData = res.data.data.yqzc_work_report
     this.totalPage = Math.ceil(res.data.data.count / 10)
@@ -656,14 +679,16 @@ export default {
       Vue.set(this.historicalData[i], 'nextAttention', '')
       Vue.set(this.historicalData[i], 'webAttachment', '')
       Vue.set(this.historicalData[i], 'webAttachment2', '')
-      this.historicalData[i].webAttachment = res.data.data.yqzc_work_report[i].attachment.split('::')
+      if ( res.data.data.yqzc_work_report[i].attachment === null ) this.historicalData[i].attachment = ''
+      if ( res.data.data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
+      this.historicalData[i].webAttachment = this.historicalData[i].attachment.split('::')
       this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
         let name = item.match(/\d_.+\.doc$|_.+\.docx$|_.+\.ppt$|_.+\.pptx$/)
         if (name) {
-          return { name: name[0].substr(2), url: 'http://172.22.0.34:8080/yqzc/downattachment?filename=' + name[0].substr(2) }
+          return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
         }
       })
-      this.historicalData[i].nextAttention = res.data.data.yqzc_work_report[i].next_attention.split('::')
+      this.historicalData[i].nextAttention =this.historicalData[i].next_attention.split('::')
       this.historicalData[i].title = res.data.data.yqzc_work_report[i].current_year + ' 年' + res.data.data.yqzc_work_report[i].journel_month + ' 月'
     }
   }
@@ -672,6 +697,10 @@ export default {
 </script>
 
 <style scoped>
+.bottomBar{
+  position: absolute;
+  top: 550px;
+}
 a{
   text-decoration: none;
   color: white;
@@ -694,7 +723,7 @@ a{
 }
 .bottomGroup{
   position: relative;
-  margin-top: 40px;
+  margin-top: 20px;
   margin-bottom: 0;
   width: 100%;
   text-align: center;
