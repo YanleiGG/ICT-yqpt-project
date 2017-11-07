@@ -209,7 +209,7 @@
                     </v-flex>
                     <v-flex class="text" v-if="index2 == historicalData[index].nextAttention.length-1">
                       <v-btn :disabled="disabledVal" @click="addNext(index, 1)" v-tooltip:top="{ html:'增加'}" icon class="indigo--text"><v-icon>add</v-icon></v-btn>
-                      <v-btn :disabled="historicalData[index].nextAttention.length==1" @click="deleteNext(index, 1)" v-tooltip:top="{ html:'删除'}" icon class="red--text"><v-icon>remove</v-icon></v-btn>
+                      <v-btn :disabled="historicalData[index].nextAttention.length==1 || disabledVal" @click="deleteNext(index, 1)" v-tooltip:top="{ html:'删除'}" icon class="red--text"><v-icon>remove</v-icon></v-btn>
                     </v-flex>
                   </v-layout>
                 </template>
@@ -302,7 +302,7 @@ export default {
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'webAttachment2', '')
             tempThis.historicalData[tempThis.showIndex].webAttachment = res.data.data.yqzc_work_report.attachment.split('::')
             tempThis.historicalData[tempThis.showIndex].webAttachment2 = tempThis.historicalData[tempThis.showIndex].webAttachment.map(function (item) {
-              let name = item.match(/\d_.+\.doc$|_.+\.docx$|_.+\.ppt$|_.+\.pptx$/)
+              let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
               if (name) {
                 return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
               }
@@ -373,8 +373,8 @@ export default {
       }, 50)
     },
     submitForm (index) {
-      let path = document.getElementById('fileForm')[0].value
-      if (!path.match(/\.doc$|\.docx$/)) {
+      let filePath = document.getElementById('fileForm')[0].value
+      if (!filePath.match(/\.doc$|\.docx$/)) {
         alert('请上传正确格式的文件！(.doc 或 .docx)')
         return
       }
@@ -395,7 +395,7 @@ export default {
       })
       this.historicalData[index].webAttachment.push(temp[Object.keys(temp)[0]])
       this.historicalData[index].webAttachment2 = this.historicalData[index].webAttachment.map(function (item) {
-        let name = item.match(/\d_.+\.doc$|_.+\.docx$|_.+\.ppt$|_.+\.pptx$/)
+        let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
         if (name) {
           return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
         }
@@ -406,7 +406,7 @@ export default {
       this.historicalData[index].nextAttention.push('')
     },
     deleteNext (index) {
-      this.historicalData[index].nextAttention.splice(this.historicalData[index].nextAttention - 1, 1)
+      this.historicalData[index].nextAttention.splice(this.historicalData[index].nextAttention.length - 1, 1)
     },
     editHis (index) {
       this.showIndex = index
@@ -516,8 +516,8 @@ export default {
     },
     uploadTemplate () {
       let tempThis = this
-      let path = document.getElementById('fileForm2')[0].value
-      if (!path.match(/\.ppt$|\.pptx$/)) {
+      let filePath = document.getElementById('fileForm2')[0].value
+      if (!filePath.match(/\.ppt$|\.pptx$/)) {
         alert('请上传正确格式的文件！(.ppt 或 .pptx)')
         return
       }
@@ -622,9 +622,11 @@ export default {
         if ( res.data.data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
         this.historicalData[i].webAttachment = this.historicalData[i].attachment.split('::')
         this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
-          let name = item.match(/\d_.+\.doc$|_.+\.docx$|_.+\.ppt$|_.+\.pptx$/)
+          let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
           if (name) {
-            return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
+            return { name: name[0].substr(2), url: path + '/downattachment?filename=' + item }
+          } else {
+              return { name: item, url: path + '/downattachment?filename=' + item }
           }
         })
         this.historicalData[i].nextAttention = res.data.data.yqzc_work_report[i].next_attention.split('::')
@@ -683,9 +685,11 @@ export default {
       if ( res.data.data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
       this.historicalData[i].webAttachment = this.historicalData[i].attachment.split('::')
       this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
-        let name = item.match(/\d_.+\.doc$|_.+\.docx$|_.+\.ppt$|_.+\.pptx$/)
+        let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
         if (name) {
-          return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
+          return { name: name[0].substr(2), url: path + '/downattachment?filename=' + item }
+        } else {
+            return { name: item, url: path + '/downattachment?filename=' + item }
         }
       })
       this.historicalData[i].nextAttention =this.historicalData[i].next_attention.split('::')
