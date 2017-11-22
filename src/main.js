@@ -4,8 +4,7 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import Vuetify from 'vuetify'
-// require('material-design-icons/iconfont/material-icons.css')
-require('./assets/icon.css')
+require('./assets/material-icons.css')
 require('vuetify/dist/vuetify.min.css')
 
 Vue.use(Vuetify)

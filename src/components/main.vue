@@ -1,6 +1,6 @@
 <template>
     <v-app>
-      <v-navigation-drawer persistent light v-model="drawer" class="nav">
+      <v-navigation-drawer persistent light v-model="drawer" class="nav-1">
         <v-toolbar flat class="transparent">
           <v-list class="pa-0">
             <v-list-tile avatar>
@@ -15,7 +15,7 @@
         </v-toolbar>
         <v-list class="pt-2" dense>
           <v-divider></v-divider>
-          <v-list-tile class="pt-2" v-for="(item,index) in historicalData" :key="item.title" @click="hisClick(index, item.title)">
+          <v-list-tile :value="index==showIndex" class="pt-2" v-for="(item,index) in historicalData" :key="item.title" @click="hisClick(index, item.title)">
             <v-list-tile-content>
               <v-list-tile-title>{{ item.title }}</v-list-tile-title>
             </v-list-tile-content>
@@ -34,7 +34,7 @@
             <div style="font-size:120%">{{ templateName }}</div>
             <div class="headline red--text templateTitle">作图模板</div>
             <v-btn @click="emitInputFile" icon v-tooltip:top="{ html:'上传'}" class="indigo--text"><v-icon>file_upload</v-icon></v-btn>
-            <a :href="[path + '/download']"><v-btn icon v-tooltip:top="{ html:'下载'}" class="indigo--text"><v-icon>file_download</v-icon></v-btn></a>           
+            <a :href="[path + '/download']"><v-btn icon v class="indigo--text"><v-icon>file_download</v-icon></v-btn></a>           
           </div>
           <form class="uploadTemplate" id="fileForm2">
             <input style="width:3px" type="file" id="files" name="files" @change='uploadTemplate'>
@@ -46,6 +46,10 @@
           <div v-for="(item,index) in historicalData" :key="item.title" v-if="index == showIndex">
             <form id="allForm">
               <v-layout>
+                <v-flex md1>
+                  <v-btn v-tooltip:bottom="{ html:'展开列表'}" @click="drawer = !drawer" icon v-show="!drawer"><v-icon>keyboard_arrow_right</v-icon></v-btn>
+                  <v-btn v-tooltip:bottom="{ html:'收起列表'}" @click="drawer = !drawer" icon v-show="drawer"><v-icon>keyboard_arrow_left</v-icon></v-btn>
+                </v-flex>
                 <v-flex md2>
                   <v-select :disabled="disabledVal || ymDisableVal" @change="yearMonthChange(index)" :items="yearItems" v-model="historicalData[index].current_year" label="年"></v-select>
                 </v-flex>
@@ -55,11 +59,11 @@
                 <v-flex md2 style="margin-left:20px;">
                   <v-text-field :disabled="disabledVal" label="编辑人" v-model="historicalData[index].editor"></v-text-field>
                 </v-flex>
-                <v-flex offset-md2>
+                <v-flex offset-md1>
                   <v-btn primary @click="createTable">新建报表</v-btn>
                   <v-btn primary @click="exportTable(index)">导出简报</v-btn>
                   <router-link to="/instruction"><span class="indigo--text" style="color:black;font-size:110%;margin-left:10px">使用说明</span></router-link>
-                  <a class="export" :href="[path + '/export?cid='+historicalData[index].id+'&type=jb']"></a>
+                  <a target="_blank" class="export" :href="[path + '/export?cid='+historicalData[index].id+'&type=jb']"></a>
                 </v-flex>
               </v-layout>
               <div class="afterTop"><span style="margin-left:15px">简报第 {{ historicalData[index].journel_all_idj }} 期</span></div>
@@ -218,14 +222,15 @@
                 <v-toolbar style="background-color:rgb(25,118,210)"><v-card-title><span class="headline white--text">附件</span></v-card-title></v-toolbar>
                 <v-layout style="padding:20px;">
                   <v-flex offset-md1>
-                    <div style="font-size: 20px" v-if="item != undefined" v-for="(item, index2) in historicalData[index].webAttachment2" :key="item.name">
+                    <div style="font-size: 20px" v-if="item != undefined" v-for="(item, index2) in historicalData[index].webAttachment2" :key="item.url">
                       <span>{{ item.name }}</span>
-                      <a style='margin-left:15px' :href="item.url"><v-btn primary>下载</v-btn></a>
+                      <v-btn primary @click="downloadAttachment(index2)">下载</v-btn>
+                      <a target="_blank" v-show="false" :href="item.url" class="attachmentA"></a>
                       <v-btn :disabled="disabledVal" error @click="deleteAttachment(index, index2)">删除</v-btn>
                     </div>
                     <form id="fileForm" style="margin-top:30px">
                       <input :disabled="disabledVal" type="file" name="files" id="files">
-                      <v-btn @click="submitForm(index)" small :disabled="disabledVal">确认提交</v-btn>
+                      <v-btn @click="submitForm(index)" small :disabled="disabledVal || submitBtnDisabled">确认提交</v-btn>
                     </form>
                   </v-flex>
                 </v-layout>
@@ -260,7 +265,7 @@ import $ from 'jquery'
 
 var temp = ''
 let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc'
-// path = 'http://172.22.0.34:8080/yqzc'
+path = 'http://172.22.0.34:8080/yqzc'
 
 export default {
   name: 'main',
@@ -282,7 +287,8 @@ export default {
       dialog: false,
       templateName: '',
       deleteIndex: -1,
-      path: path
+      path: path,
+      submitBtnDisabled: false
     }
   },
   methods: {
@@ -378,29 +384,37 @@ export default {
         alert('请上传正确格式的文件！(.doc 或 .docx)')
         return
       }
+      this.submitBtnDisabled = true
+      let tempThis = this
       let formData = new FormData(document.getElementById('fileForm'))
       $.ajax({
         url: path + '/upload',
         type: 'post',
         data: formData,
-        async: false,
+        // async: false,
         contentType: false,
         processData: false,
         success: function (data) {
-          temp = JSON.parse(data).data.files
+          if (JSON.parse(data).result === 'success') {
+            temp = JSON.parse(data).data.files
+            tempThis.historicalData[index].webAttachment.push(temp[Object.keys(temp)[0]])
+            tempThis.historicalData[index].webAttachment2 = tempThis.historicalData[index].webAttachment.map(function (item) {
+              let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
+              if (name) {
+                return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
+              }
+            })
+          } else {
+            alert('上传失败，请重新尝试！')
+          }
+          tempThis.submitBtnDisabled = false
+          temp = ''
         },
         error: function (data) {
-          console.log(data)
+          alert('上传失败，请重新尝试！')
+          tempThis.submitBtnDisabled = false
         }
       })
-      this.historicalData[index].webAttachment.push(temp[Object.keys(temp)[0]])
-      this.historicalData[index].webAttachment2 = this.historicalData[index].webAttachment.map(function (item) {
-        let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
-        if (name) {
-          return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
-        }
-      })
-      temp = ''
     },
     addNext (index) {
       this.historicalData[index].nextAttention.push('')
@@ -618,17 +632,22 @@ export default {
         Vue.set(this.historicalData[i], 'nextAttention', '')
         Vue.set(this.historicalData[i], 'webAttachment', '')
         Vue.set(this.historicalData[i], 'webAttachment2', '')
-        if ( res.data.data.yqzc_work_report[i].attachment === null ) this.historicalData[i].attachment = ''
+        if ( res.data.data.yqzc_work_report[i].attachment === '' ) {
+          this.historicalData[i].attachment = ''
+          this.historicalData[i].webAttachment = []
+          this.historicalData[i].webAttachment2 = []
+        } else {
+          this.historicalData[i].webAttachment = this.historicalData[i].attachment.split('::')
+          this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
+            let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
+            if (name) {
+              return { name: name[0].substr(2), url: path + '/downattachment?filename=' + item }
+            } else {
+                return { name: item, url: path + '/downattachment?filename=' + item }
+            }
+          })        
+        }
         if ( res.data.data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
-        this.historicalData[i].webAttachment = this.historicalData[i].attachment.split('::')
-        this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
-          let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
-          if (name) {
-            return { name: name[0].substr(2), url: path + '/downattachment?filename=' + item }
-          } else {
-              return { name: item, url: path + '/downattachment?filename=' + item }
-          }
-        })
         this.historicalData[i].nextAttention = res.data.data.yqzc_work_report[i].next_attention.split('::')
         this.historicalData[i].title = res.data.data.yqzc_work_report[i].current_year + ' 年' + res.data.data.yqzc_work_report[i].journel_month + ' 月'
       }
@@ -645,6 +664,9 @@ export default {
         }
       }
       $('.export')[0].click()
+    },
+    downloadAttachment (index) {
+      $('.attachmentA')[index].click()
     }
   },
   computed: {
@@ -681,19 +703,24 @@ export default {
       Vue.set(this.historicalData[i], 'nextAttention', '')
       Vue.set(this.historicalData[i], 'webAttachment', '')
       Vue.set(this.historicalData[i], 'webAttachment2', '')
-      if ( res.data.data.yqzc_work_report[i].attachment === null ) this.historicalData[i].attachment = ''
+      if ( res.data.data.yqzc_work_report[i].attachment === '' ) {
+        this.historicalData[i].attachment = ''
+        this.historicalData[i].webAttachment = []
+        this.historicalData[i].webAttachment2 = []
+      } else {
+        this.historicalData[i].webAttachment = this.historicalData[i].attachment.split('::')
+        this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
+          let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
+          if (name) {
+            return { name: name[0].substr(2), url: path + '/downattachment?filename=' + item }
+          } else {
+              return { name: item, url: path + '/downattachment?filename=' + item }
+          }
+        })        
+      }
       if ( res.data.data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
-      this.historicalData[i].webAttachment = this.historicalData[i].attachment.split('::')
-      this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
-        let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
-        if (name) {
-          return { name: name[0].substr(2), url: path + '/downattachment?filename=' + item }
-        } else {
-            return { name: item, url: path + '/downattachment?filename=' + item }
-        }
-      })
       this.historicalData[i].nextAttention =this.historicalData[i].next_attention.split('::')
-      this.historicalData[i].title = res.data.data.yqzc_work_report[i].current_year + ' 年' + res.data.data.yqzc_work_report[i].journel_month + ' 月'
+      this.historicalData[i].title = res.data.data.yqzc_work_report[i].current_year + ' 年 ' + res.data.data.yqzc_work_report[i].journel_month + ' 月'
     }
   }
 }
@@ -745,7 +772,7 @@ a{
   display: inline-block;
   vertical-align: middle;
 }
-.nav{
+.nav-1{
   padding: 0;
 }
 .uploadTemplate{
