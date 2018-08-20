@@ -116,7 +116,7 @@
                     </v-flex>
                   </v-layout>              
                 </v-flex>
-                <v-card-title style="margin-left:15px"><h6>向网信部上报信息情况</h6></v-card-title>
+                <v-card-title style="margin-left:15px"><h6>向网信办上报信息情况</h6></v-card-title>
                 <v-flex offset-md1>
                   <v-layout wrap>
                     <v-flex class="text" md3>
@@ -125,7 +125,7 @@
                   </v-layout>
                   <v-layout wrap>
                     <v-flex class="text" style="font-size:18px">
-                      <span>专项检测</span>
+                      <span style="color: grey">专项监测</span>
                     </v-flex>
                   </v-layout>
                   <template v-for="(item,index2) in historicalData[index].wxb_zxjc_arr">
@@ -401,7 +401,7 @@ export default {
               is_submit: false,
               wxb_yqkb: '',
               wxb_zxjc: '',
-              wxb_zxjc_arr: []
+              wxb_zxjc_arr: [{ name: '', count: '' }]
             })
             tempThis.showIndex = 0
           }
@@ -659,7 +659,7 @@ export default {
         webAttachment2: [],
         wxb_yqkb: '',
         wxb_zxjc: '',
-        wxb_zxjc_arr: []
+        wxb_zxjc_arr: [{ name: '', count: '' }]
       })
       this.showIndex = 0
       this.disabledVal = false
