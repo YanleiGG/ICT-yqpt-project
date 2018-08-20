@@ -1,6 +1,6 @@
 <template>
     <v-app>
-      <v-navigation-drawer app persistent light v-model="drawer" class="nav-1">
+      <v-navigation-drawer app persistent light v-model="drawer" class="nav-1" style="z-index:0">
         <v-toolbar flat class="transparent">
           <v-list class="pa-0">
             <v-list-tile avatar>
@@ -116,7 +116,34 @@
                     </v-flex>
                   </v-layout>              
                 </v-flex>
-                <v-card-title style="margin-left:15px"><h6>向工信部上报信息情况</h6></v-card-title>
+                <v-card-title style="margin-left:15px"><h6>向网信部上报信息情况</h6></v-card-title>
+                <v-flex offset-md1>
+                  <v-layout wrap>
+                    <v-flex class="text" md3>
+                      <v-text-field :disabled="disabledVal"  label="应急局《舆情快报》（期）" v-model="historicalData[index].wxb_yqkb"></v-text-field>
+                    </v-flex>
+                  </v-layout>
+                  <v-layout wrap>
+                    <v-flex class="text" style="font-size:18px">
+                      <span>专项检测</span>
+                    </v-flex>
+                  </v-layout>
+                  <template v-for="(item,index2) in historicalData[index].wxb_zxjc_arr">
+                    <v-layout style="padding:20px;" :key="item.val">
+                      <v-flex class="text" md4>
+                        <v-text-field :disabled="disabledVal"  label="专项名称" v-model="historicalData[index].wxb_zxjc_arr[index2].name"></v-text-field>
+                      </v-flex>
+                      <v-flex class="text" md4>
+                        <v-text-field :disabled="disabledVal"  label="期数" v-model="historicalData[index].wxb_zxjc_arr[index2].count"></v-text-field>
+                      </v-flex>
+                      <v-flex class="text" v-if="index2 == historicalData[index].wxb_zxjc_arr.length-1">
+                        <v-btn :disabled="disabledVal" @click="addZXJC(index, 1)" v-tooltip:top="{ html:'增加'}" icon class="indigo--text"><v-icon>add</v-icon></v-btn>
+                        <v-btn :disabled="historicalData[index].wxb_zxjc_arr.length==1 || disabledVal" @click="deleteZXJC(index, 1)" v-tooltip:top="{ html:'删除'}" icon class="red--text"><v-icon>remove</v-icon></v-btn>
+                      </v-flex>
+                    </v-layout>
+                  </template>
+                </v-flex>
+                <!-- <v-card-title style="margin-left:15px"><h6>向工信部上报信息情况</h6></v-card-title>
                 <v-flex offset-md1>
                   <v-layout wrap>
                     <v-flex class="text" md3>
@@ -134,9 +161,9 @@
                     <v-flex class="text" md10>
                       <v-text-field :disabled="disabledVal"  label="典型信息标题" v-model="historicalData[index].ministry_abstract"></v-text-field>
                     </v-flex>
-                  </v-layout>              
-                </v-flex>
-                <v-card-title style="margin-left:15px"><h6>向其他重要部门报送信息情况</h6></v-card-title>
+                  </v-layout>         
+                </v-flex> -->
+                <!-- <v-card-title style="margin-left:15px"><h6>向其他重要部门报送信息情况</h6></v-card-title>
                 <v-flex offset-md1>
                   <v-layout wrap>
                     <v-flex class="text" md2>
@@ -172,7 +199,7 @@
                       <v-text-field :disabled="disabledVal"  label="信息总量（条）" v-model="historicalData[index].other_mobile_count"></v-text-field>
                     </v-flex>
                   </v-layout>                
-                </v-flex>
+                </v-flex> -->
                 <v-card-title style="margin-left:15px"><h6>向中心领导及其他处室报送信息情况</h6></v-card-title>
                 <v-flex offset-md1>
                   <v-layout>
@@ -264,7 +291,7 @@ import $ from 'jquery'
 
 var temp = ''
 let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
-// path = 'http://172.22.0.34:8080/yqzc2'
+// let path = 'http://172.22.0.34:8080/yqzc2'
 
 export default {
   name: 'main',
@@ -299,21 +326,22 @@ export default {
       setTimeout(async function () {
         if (tempThis.historicalData[tempThis.showIndex].journel_month) {
           let res = await axios.get(`${path}/verify?year=${tempThis.historicalData[index].current_year}&month=${tempThis.historicalData[index].journel_month}`)
-          if (res.data.data.yqzc_work_report) {
-            tempThis.historicalData[tempThis.showIndex] = res.data.data.yqzc_work_report
+          let data = res.data.data
+          if (data.yqzc_work_report) {
+            tempThis.historicalData[tempThis.showIndex] = data.yqzc_work_report
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'title', '')
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'nextAttention', '')
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'webAttachment', '')
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'webAttachment2', '')
-            tempThis.historicalData[tempThis.showIndex].webAttachment = res.data.data.yqzc_work_report.attachment.split('::')
+            tempThis.historicalData[tempThis.showIndex].webAttachment = data.yqzc_work_report.attachment.split('::')
             tempThis.historicalData[tempThis.showIndex].webAttachment2 = tempThis.historicalData[tempThis.showIndex].webAttachment.map(function (item) {
               let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
               if (name) {
                 return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
               }
             })
-            tempThis.historicalData[tempThis.showIndex].nextAttention = res.data.data.yqzc_work_report.next_attention.split('::')
-            tempThis.historicalData[tempThis.showIndex].title = res.data.data.yqzc_work_report.current_year + ' 年' + res.data.data.yqzc_work_report.journel_month + ' 月'
+            tempThis.historicalData[tempThis.showIndex].nextAttention = data.yqzc_work_report.next_attention.split('::')
+            tempThis.historicalData[tempThis.showIndex].title = data.yqzc_work_report.current_year + ' 年' + data.yqzc_work_report.journel_month + ' 月'
             let tempIndex = tempThis.showIndex
             tempThis.showIndex = -1
             Vue.nextTick()
@@ -339,8 +367,8 @@ export default {
               emergency_periodicals: '',
               finish_status: '',
               general_assign: '',
-              journel_year_idj: res.data.data.journel_info.journel_year_idj,
-              journel_all_idj: res.data.data.journel_info.journel_all_idj,
+              journel_year_idj: data.journel_info.journel_year_idj,
+              journel_all_idj: data.journel_info.journel_all_idj,
               journel_month: tempMonth,
               manage_learn_status: '',
               manage_research_status: '',
@@ -370,7 +398,10 @@ export default {
               zx_jw_count: '',
               webAttachment: [],
               webAttachment2: [],
-              is_submit: false
+              is_submit: false,
+              wxb_yqkb: '',
+              wxb_zxjc: '',
+              wxb_zxjc_arr: []
             })
             tempThis.showIndex = 0
           }
@@ -421,6 +452,12 @@ export default {
     deleteNext (index) {
       this.historicalData[index].nextAttention.splice(this.historicalData[index].nextAttention.length - 1, 1)
     },
+    addZXJC (index) {
+      this.historicalData[index].wxb_zxjc_arr.push({ name: '', count: '' })
+    },
+    deleteZXJC (index) {
+      this.historicalData[index].wxb_zxjc_arr.splice(this.historicalData[index].wxb_zxjc_arr.length - 1, 1)
+    },
     editHis (index) {
       this.showIndex = index
       this.disabledVal = false
@@ -462,6 +499,10 @@ export default {
       }
       this.historicalData[index].next_attention = this.historicalData[index].nextAttention.join('::')
       this.historicalData[index].attachment = this.historicalData[index].webAttachment.join('::')
+      this.historicalData[index].wxb_zxjc = ''
+      this.historicalData[index].wxb_zxjc_arr.forEach(item => {
+        this.historicalData[index].wxb_zxjc += item.name + "::" + item.count + ';'
+      })
       let formData = new FormData()
       for (var i in this.historicalData[index]) {
         if (this.historicalData[index][i] !== null && this.historicalData[index][i] !== 'null') formData.append(i.toString(), this.historicalData[index][i].toString())
@@ -495,6 +536,10 @@ export default {
       }
       this.historicalData[index].next_attention = this.historicalData[index].nextAttention.join('::')
       this.historicalData[index].attachment = this.historicalData[index].webAttachment.join('::')
+      this.historicalData[index].wxb_zxjc = ''
+      this.historicalData[index].wxb_zxjc_arr.forEach(item => {
+        this.historicalData[index].wxb_zxjc += item.name + "::" + item.count + ';'
+      })
       let formData = new FormData()
       for (var i in this.historicalData[index]) {
         if (this.historicalData[index][i] !== null) formData.append(i.toString(), this.historicalData[index][i].toString())
@@ -611,28 +656,33 @@ export default {
         zx_info_count: '',
         zx_jw_count: '',
         webAttachment: [],
-        webAttachment2: []
+        webAttachment2: [],
+        wxb_yqkb: '',
+        wxb_zxjc: '',
+        wxb_zxjc_arr: []
       })
       this.showIndex = 0
       this.disabledVal = false
     },
     async refresh () {
       let res = await axios.get(`${path}/query?page=${this.page}&state=${this.state}`)
-      this.historicalData = res.data.data.yqzc_work_report      
-      this.templateName = res.data.data.template
-      this.totalPage = Math.ceil(res.data.data.count / 10)
-      if (res.data.data.yqzc_work_report.length === 0) {
+      let data = res.data.data
+      this.historicalData = data.yqzc_work_report      
+      this.templateName = data.template
+      this.totalPage = Math.ceil(data.count / 10)
+      if (data.yqzc_work_report.length === 0) {
         this.historicalData = []
         this.totalPage = 1
         this.createTable()
         return
       }
-      for (let i = 0; i < res.data.data.yqzc_work_report.length; i++) {
+      for (let i = 0; i < data.yqzc_work_report.length; i++) {
         Vue.set(this.historicalData[i], 'title', '')
         Vue.set(this.historicalData[i], 'nextAttention', '')
         Vue.set(this.historicalData[i], 'webAttachment', '')
         Vue.set(this.historicalData[i], 'webAttachment2', '')
-        if ( res.data.data.yqzc_work_report[i].attachment === '' ) {
+        Vue.set(this.historicalData[i], 'wxb_zxjc_arr', [])
+        if ( data.yqzc_work_report[i].attachment === '' ) {
           this.historicalData[i].attachment = ''
           this.historicalData[i].webAttachment = []
           this.historicalData[i].webAttachment2 = []
@@ -647,9 +697,19 @@ export default {
             }
           })        
         }
-        if ( res.data.data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
-        this.historicalData[i].nextAttention = res.data.data.yqzc_work_report[i].next_attention.split('::')
-        this.historicalData[i].title = res.data.data.yqzc_work_report[i].current_year + ' 年' + res.data.data.yqzc_work_report[i].journel_month + ' 月'
+        if (!data.yqzc_work_report[i].wxb_zxjc) {
+          this.historicalData[i].wxb_zxjc_arr = [{ name: '', count: '' }]
+        } else {
+          this.historicalData[i].wxb_zxjc_arr = []
+          data.yqzc_work_report[i].wxb_zxjc.split(';').forEach(item => {
+            if (item != '') {
+              this.historicalData[i].wxb_zxjc_arr.push({ name: item.split("::")[0], count: item.split("::")[1] })
+            }
+          })
+        }        
+        if ( data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
+        this.historicalData[i].nextAttention = data.yqzc_work_report[i].next_attention.split('::')
+        this.historicalData[i].title = data.yqzc_work_report[i].current_year + ' 年 ' + data.yqzc_work_report[i].journel_month + ' 月'
       }
     },
     deleteAttachment (index, index2) {
@@ -691,19 +751,22 @@ export default {
   },
   created: async function () {
     let res = await axios.get(path + '/query?page=1&state=0')
-    if (res.data.data.yqzc_work_report.length === 0) {
+    let data = res.data.data
+    console.log(data)
+    if (data.yqzc_work_report.length === 0) {
       this.createTable()
       return
     }
-    this.templateName = res.data.data.template
-    this.historicalData = res.data.data.yqzc_work_report
-    this.totalPage = Math.ceil(res.data.data.count / 10)
-    for (let i = 0; i < res.data.data.yqzc_work_report.length; i++) {
+    this.templateName = data.template
+    this.historicalData = data.yqzc_work_report
+    this.totalPage = Math.ceil(data.count / 10)
+    for (let i = 0; i < data.yqzc_work_report.length; i++) {
       Vue.set(this.historicalData[i], 'title', '')
       Vue.set(this.historicalData[i], 'nextAttention', '')
       Vue.set(this.historicalData[i], 'webAttachment', '')
       Vue.set(this.historicalData[i], 'webAttachment2', '')
-      if ( res.data.data.yqzc_work_report[i].attachment === '' ) {
+      Vue.set(this.historicalData[i], 'wxb_zxjc_arr', [])
+      if ( data.yqzc_work_report[i].attachment === '' ) {
         this.historicalData[i].attachment = ''
         this.historicalData[i].webAttachment = []
         this.historicalData[i].webAttachment2 = []
@@ -718,9 +781,19 @@ export default {
           }
         })        
       }
-      if ( res.data.data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
+      if (!data.yqzc_work_report[i].wxb_zxjc) {
+        this.historicalData[i].wxb_zxjc_arr = [{ name: '', count: '' }]
+      } else {
+        this.historicalData[i].wxb_zxjc_arr = []
+        data.yqzc_work_report[i].wxb_zxjc.split(';').forEach(item => {
+          if (item != '') {
+            this.historicalData[i].wxb_zxjc_arr.push({ name: item.split("::")[0], count: item.split("::")[1] })
+          }
+        })
+      }
+      if ( data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
       this.historicalData[i].nextAttention =this.historicalData[i].next_attention.split('::')
-      this.historicalData[i].title = res.data.data.yqzc_work_report[i].current_year + ' 年 ' + res.data.data.yqzc_work_report[i].journel_month + ' 月'
+      this.historicalData[i].title = data.yqzc_work_report[i].current_year + ' 年 ' + data.yqzc_work_report[i].journel_month + ' 月'
     }
   }
 }

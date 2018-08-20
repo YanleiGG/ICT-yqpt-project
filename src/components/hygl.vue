@@ -1,6 +1,6 @@
 <template>
   <v-app>
-    <v-navigation-drawer persistent light v-model="drawer" class="nav-1">
+    <v-navigation-drawer persistent light v-model="drawer" class="nav-1" style="z-index:0">
       <v-toolbar flat class="transparent">
         <v-list class="pa-0">
           <v-list-tile avatar>
@@ -200,7 +200,7 @@ import Vue from 'vue'
 import moment from 'moment'
 
 let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
-// path = 'http://172.22.0.34:8080/yqzc2'
+// let path = 'http://172.22.0.34:8080/yqzc2'
 let temp = ''
 
 export default{
