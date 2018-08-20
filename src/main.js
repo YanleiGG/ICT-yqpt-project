@@ -4,10 +4,13 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 import Vuetify from 'vuetify'
+import ElementUI from 'element-ui'
+import 'element-ui/lib/theme-chalk/index.css'
 require('./assets/material-icons.css')
 require('vuetify/dist/vuetify.min.css')
 
 Vue.use(Vuetify)
+Vue.use(ElementUI)
 
 Vue.config.productionTip = false
 
