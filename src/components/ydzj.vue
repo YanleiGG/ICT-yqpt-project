@@ -110,7 +110,16 @@
           </v-flex>
         </v-layout>
       </v-card>
-    </v-dialog>   
+    </v-dialog> 
+    <v-dialog v-model="submitDialog" width="50%">
+      <v-card>
+        <v-card-title><span class="headline">提交后将不能再修改，确认提交吗？</span></v-card-title>
+        <div style="text-align:right">
+          <v-btn @click.native.stop="submitDialog = false" @click="confirmSubmit" primary>确认</v-btn>
+          <v-btn @click.native.stop="submitDialog = false" error @click="submitIndex = -1">取消</v-btn>
+        </div>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -119,8 +128,8 @@ import axios from 'axios'
 import $ from 'jquery'
 import Vue from 'vue'
 
-let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
-// let path = 'http://172.22.0.34:8080/yqzc2'
+// let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
+let path = 'http://172.22.0.34:8080/yqzc2'
 let temp = ''
 
 export default {
@@ -139,9 +148,11 @@ export default {
       totalPage: 0,
       dialog: false,
       deleteIndex: -1,
+      submitIndex: -1,
       nameArr: [],
       path: path,
-      listDialog: false
+      listDialog: false,
+      submitDialog: false
     }
   },
   methods: {
@@ -243,9 +254,13 @@ export default {
         alert('操作失败，请再次尝试！')
       }
     },
-    async submit (index) {
-      this.historicalData[index].is_submit = true
-      this.save(index)
+    submit(index) {
+      this.submitDialog = true
+      this.submitIndex = index
+    },
+    confirmSubmit () {
+      this.historicalData[this.submitIndex].is_submit = true
+      this.save(this.submitIndex)
     },
     createTable () {
       this.ymDisableVal = false

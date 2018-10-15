@@ -271,12 +271,21 @@
         </v-container>
       </main>
       <!-- 弹出框 -->
-      <v-dialog v-model="dialog" width="50%">
+      <v-dialog v-model="deleteDialog" width="50%">
         <v-card>
           <v-card-title><span class="headline">确认删除吗？</span></v-card-title>
           <div style="text-align:right">
-            <v-btn @click.native.stop="dialog = false" @click="confirmDelete" primary>确认</v-btn>
-            <v-btn @click.native.stop="dialog = false" error @click="deleteIndex = -1">取消</v-btn>
+            <v-btn @click.native.stop="deleteDialog = false" @click="confirmDelete" primary>确认</v-btn>
+            <v-btn @click.native.stop="deleteDialog = false" error @click="deleteIndex = -1">取消</v-btn>
+          </div>
+        </v-card>
+      </v-dialog>
+      <v-dialog v-model="submitDialog" width="50%">
+        <v-card>
+          <v-card-title><span class="headline">提交后将不能再修改，确认提交吗？</span></v-card-title>
+          <div style="text-align:right">
+            <v-btn @click.native.stop="submitDialog = false" @click="confirmSubmit" primary>确认</v-btn>
+            <v-btn @click.native.stop="submitDialog = false" error @click="submitIndex = -1">取消</v-btn>
           </div>
         </v-card>
       </v-dialog>
@@ -290,8 +299,8 @@ import _ from 'lodash'
 import $ from 'jquery'
 
 var temp = ''
-let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
-// let path = 'http://172.22.0.34:8080/yqzc2'
+// let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
+let path = 'http://172.22.0.34:8080/yqzc2'
 
 export default {
   name: 'main',
@@ -310,9 +319,11 @@ export default {
       fileList: [],
       file: '',
       yearItems: [2017, 2018, 2019, 2020],
-      dialog: false,
+      deleteDialog: false,
+      submitDialog: false,
       templateName: '',
       deleteIndex: -1,
+      submitIndex: -1,
       path: path,
       submitBtnDisabled: false
     }
@@ -468,7 +479,7 @@ export default {
       this.ymDisableVal = true
     },
     deleteHis (index) {
-      this.dialog = true
+      this.deleteDialog = true
       this.deleteIndex = index
     },
     confirmDelete () {
@@ -529,7 +540,12 @@ export default {
         alert('保存失败，请再次尝试！')
       }
     },
-    submit (index) {
+    submit(index) {
+      this.submitDialog = true
+      this.submitIndex = index
+    },
+    confirmSubmit () {
+      let index = this.submitIndex
       this.historicalData[index].is_submit = true
       for (let i = 0; i < this.historicalData[index].webAttachment.length; i++) {
         if (this.historicalData[index].webAttachment[i] === '') this.historicalData[index].webAttachment.splice(i, 1)

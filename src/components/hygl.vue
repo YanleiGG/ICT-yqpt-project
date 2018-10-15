@@ -191,6 +191,15 @@
         </div>
       </v-card>
     </v-dialog>
+    <v-dialog v-model="submitDialog" width="50%">
+    <v-card>
+        <v-card-title><span class="headline">提交后将不能再修改，确认提交吗？</span></v-card-title>
+        <div style="text-align:right">
+        <v-btn @click.native.stop="submitDialog = false" @click="confirmSubmit" primary>确认</v-btn>
+        <v-btn @click.native.stop="submitDialog = false" error @click="submitIndex = -1">取消</v-btn>
+        </div>
+    </v-card>
+    </v-dialog>
   </v-app>
 </template>
 <script>
@@ -199,8 +208,8 @@ import $ from 'jquery'
 import Vue from 'vue'
 import moment from 'moment'
 
-let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
-// let path = 'http://172.22.0.34:8080/yqzc2'
+// let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
+let path = 'http://172.22.0.34:8080/yqzc2'
 let temp = ''
 
 export default{
@@ -218,8 +227,10 @@ export default{
             file: '',
             dialog: false,
             deleteIndex: -1,
+            submitIndex: -1,
             path: path,
             listDialog: false,
+            submitDialog: false,
             menu1: false,
             menu2: false,
             menu3: false,
@@ -315,12 +326,17 @@ export default{
             })
         },
         async submit (index) {
+            this.submitDialog = true
+            this.submitIndex = index
+        },
+        confirmSubmit () {
+            let index = this.submitIndex
             this.historicalData[index].is_submit = true
             this.save(index)
             if (this.disabledVal == false) {
                 this.historicalData[index].is_submit = false
             }
-        },  
+        },
         addItem (index) {
             this.historicalData[index].content2.push({scenter:"",mnames:"",sdate:"",strip:"",edate:"",etrip:"",attachment:"",remark:""})
             this.menu4.push(false)
