@@ -49,10 +49,10 @@
               <v-select :disabled="disabledVal || ymDisableVal" @change="yearMonthChange(index)" :items="monthItems" v-model="historicalData[index].cmonth" label="月份"></v-select>
             </v-flex>
             <v-flex md2 style="margin-left:20px;">
-              <v-text-field :disabled="disabledVal" label="编辑人" v-model="historicalData[index].editor"></v-text-field>
+              <v-text-field :disabled="true" label="编辑人" v-model="historicalData[index].editor"></v-text-field>
             </v-flex>
             <v-flex offset-md1>
-              <v-btn class="purple white--text" @click="createTable()">新建总结</v-btn>
+              <v-btn :disabled="!isLogin" class="purple white--text" @click="createTable()">新建总结</v-btn>
               <v-btn class="purple white--text" @click="exportTable(index)">导出</v-btn>
               <a target="_blank" class="export" :href="[path + '/wsm/export?id='+historicalData[index].id]"></a>
             </v-flex>
@@ -69,25 +69,25 @@
             <v-flex sm1>{{ item.name }}</v-flex>
             <v-flex sm4>
               <div v-for="(work, workIndex) in item.work" :key="workIndex">
-                <v-text-field style="width: 90%;padding: 0" :disabled="disabledVal" v-model="work.content"></v-text-field>
+                <v-text-field style="width: 90%;padding: 0" :disabled="disabledVal || username != item.name" v-model="work.content"></v-text-field>
               </div>
             </v-flex>
             <v-flex sm4>
               <div v-for="(work, workIndex) in item.work" :key="workIndex">
-                <v-text-field style="width: 90%;padding: 0" :disabled="disabledVal" v-model="work.state"></v-text-field>
+                <v-text-field style="width: 90%;padding: 0" :disabled="disabledVal || username != item.name" v-model="work.state"></v-text-field>
               </div>
             </v-flex>
             <v-flex sm2>
               <div v-for="(work, workIndex) in item.work" :key="workIndex" style="margin-bottom: 15px">
-                <v-btn v-tooltip:top="{ html:'添加'}" @click="addWork(index, index2, workIndex)" :disabled="disabledVal" slot="activator" small icon class="purple--text"><v-icon>add</v-icon></v-btn>
-                <v-btn v-tooltip:top="{ html:'删除'}" @click="deleteWork(index, index2, workIndex)" :disabled="disabledVal || item.work.length === 1" slot="activator" small icon class="red--text"><v-icon>remove</v-icon></v-btn>
+                <v-btn v-tooltip:top="{ html:'添加'}" @click="addWork(index, index2, workIndex)" :disabled="disabledVal || username != item.name" slot="activator" small icon class="purple--text"><v-icon>add</v-icon></v-btn>
+                <v-btn v-tooltip:top="{ html:'删除'}" @click="deleteWork(index, index2, workIndex)" :disabled="disabledVal || item.work.length === 1 || username != item.name" slot="activator" small icon class="red--text"><v-icon>remove</v-icon></v-btn>
               </div>       
             </v-flex>
           </v-layout>
           <div class="mainBtnGroup">
             <v-btn class="purple white--text" :disabled="disabledVal" @click="save(index)">保存</v-btn>
             <v-btn class="error" :disabled="disabledVal" @click="cancel(index)">取消</v-btn>
-            <v-btn class="purple white--text" :disabled="disabledVal" @click="submit(index)">提交</v-btn>
+            <v-btn class="purple white--text" :disabled="disabledVal || historicalData[index].editor != username" @click="submit(index)">提交</v-btn>
           </div>  
         </div>                 
       </v-container>
@@ -127,9 +127,8 @@
 import axios from 'axios'
 import $ from 'jquery'
 import Vue from 'vue'
+import { mapState, mapActions, mapMutations } from 'vuex'
 
-// let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
-let path = 'http://172.22.0.34:8080/yqzc2'
 let temp = ''
 
 export default {
@@ -150,12 +149,16 @@ export default {
       deleteIndex: -1,
       submitIndex: -1,
       nameArr: [],
-      path: path,
       listDialog: false,
       submitDialog: false
     }
   },
   methods: {
+    ...mapMutations([
+      'set_isLogin',
+      'set_userId',
+      'set_username'
+    ]),
     hisClick (index) {
       this.showIndex = index
       this.disabledVal = true
@@ -187,7 +190,7 @@ export default {
       }
       var formData = new FormData(document.getElementById('fileForm'))
       $.ajax({
-        url: path + '/wsm/updatalist',
+        url: this.path + '/wsm/updatalist',
         type: 'post',
         data: formData,
         async: false,
@@ -201,6 +204,7 @@ export default {
             tempThis.showIndex = 0
             tempThis.refresh()
             alert('上传成功!')
+            let res = await axios.get(tempThis.path + '/user/initLogin')
           } else {
             alert('上传失败!')
           }
@@ -208,7 +212,7 @@ export default {
         error: function (data) {
           console.log(data)
         }
-      })    
+      })
     },
     exportTable (index) {
       $('.export')[0].click()
@@ -231,27 +235,27 @@ export default {
           projectArr.push(this.historicalData[index].tableData[i].work[j].content)
           stateArr.push(this.historicalData[index].tableData[i].work[j].state)
         }
+        this.historicalData[index].content = JSON.parse(JSON.stringify(this.historicalData[index].content))
         this.historicalData[index].content[i].project = projectArr.join('::')
         this.historicalData[index].content[i].state = stateArr.join('::')
       }
       this.historicalData[index].content = JSON.stringify(this.historicalData[index].content)
       $.ajax({
         type: 'post',
-        url: path + '/wsm/add',
+        url: this.path + '/wsm/add',
         data: this.historicalData[index],
         async: false,
         success: function (data) {
           temp = JSON.parse(data)
         }
       })
-      console.log(temp)
       if (temp.result === 'success') {
         this.historicalData[index].id = temp.data.id
         this.disabledVal = true
         temp = ''
       } else {
         temp = ''
-        alert('操作失败，请再次尝试！')
+        alert('操作失败，请再次尝试!')
       }
     },
     submit(index) {
@@ -278,7 +282,7 @@ export default {
         cyear: '',
         cmonth: '',
         content: content,
-        editor: '',
+        editor: this.username,
         is_submit: false,
         tableData: tableData,
         title: '新建报表'
@@ -292,10 +296,8 @@ export default {
         let year = tempThis.historicalData[index].cyear
         let month = tempThis.historicalData[index].cmonth
         if (year !== '' && month !== '') {
-          let res = await axios.get(path + '/wsm/verify?year='+ year +'&month='+ month)
-          console.log(res)
+          let res = await axios.get(tempThis.path + '/wsm/verify?year='+ year +'&month='+ month)
           if (res.data.data.yqzc_work_summary) {
-            console.log('存在')
             tempThis.historicalData[0] = res.data.data.yqzc_work_summary
             tempThis.ymDisableVal = true
             let tableData = []
@@ -324,7 +326,6 @@ export default {
             Vue.set(tempThis.historicalData[0], 'title', tempThis.historicalData[0].cyear + '年' + tempThis.historicalData[0].cmonth + '月')
           } else {
             Vue.set(tempThis.historicalData[0], 'title', tempThis.historicalData[0].cyear + '年' + tempThis.historicalData[0].cmonth + '月')
-            console.log('不存在')
           }
         }
       }, 100)
@@ -333,7 +334,7 @@ export default {
       let id = this.historicalData[this.deleteIndex].id
       $.ajax({
         type: 'post',
-        url: path + '/wsm/delete',
+        url: this.path + '/wsm/delete',
         data: { id },
         async: false,
         success: function (data) {
@@ -344,8 +345,7 @@ export default {
       this.refresh()
     },
     async refresh () {
-      let res = await axios.get(path + '/wsm/query?page=' + this.page + '&state=' + this.state)  
-      console.log(res)
+      let res = await axios.get(this.path + '/wsm/query?page=' + this.page + '&state=' + this.state)  
       this.nameArr = res.data.data.name_list.split('::')
       let dataArr = res.data.data.yqzc_work_summary
       this.totalPage = Math.ceil(res.data.data.count / 10)
@@ -390,6 +390,12 @@ export default {
     this.refresh()
   },
   computed: {
+    ...mapState({
+      path: state => state.path,
+      isLogin: state => state.isLogin,
+      userId: state => state.userId,
+      username: state => state.username
+    }),
     state () {
       return this.conditionItems.indexOf(this.condition)
     }

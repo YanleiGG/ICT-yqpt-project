@@ -297,10 +297,9 @@ import Vue from 'vue'
 import axios from 'axios'
 import _ from 'lodash'
 import $ from 'jquery'
+import { mapState, mapActions, mapMutations } from 'vuex'
 
 var temp = ''
-// let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
-let path = 'http://172.22.0.34:8080/yqzc2'
 
 export default {
   name: 'main',
@@ -324,7 +323,6 @@ export default {
       templateName: '',
       deleteIndex: -1,
       submitIndex: -1,
-      path: path,
       submitBtnDisabled: false
     }
   },
@@ -336,7 +334,7 @@ export default {
       let tempThis = this
       setTimeout(async function () {
         if (tempThis.historicalData[tempThis.showIndex].journel_month) {
-          let res = await axios.get(`${path}/verify?year=${tempThis.historicalData[index].current_year}&month=${tempThis.historicalData[index].journel_month}`)
+          let res = await axios.get(`${this.path}/verify?year=${tempThis.historicalData[index].current_year}&month=${tempThis.historicalData[index].journel_month}`)
           let data = res.data.data
           if (data.yqzc_work_report) {
             tempThis.historicalData[tempThis.showIndex] = data.yqzc_work_report
@@ -348,7 +346,7 @@ export default {
             tempThis.historicalData[tempThis.showIndex].webAttachment2 = tempThis.historicalData[tempThis.showIndex].webAttachment.map(function (item) {
               let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
               if (name) {
-                return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
+                return { name: name[0].substr(2), url: this.path + '/downattachment?filename=' + name[0].substr(2) }
               }
             })
             tempThis.historicalData[tempThis.showIndex].nextAttention = data.yqzc_work_report.next_attention.split('::')
@@ -429,7 +427,7 @@ export default {
       let tempThis = this
       let formData = new FormData(document.getElementById('fileForm'))
       $.ajax({
-        url: path + '/upload',
+        url: this.path + '/upload',
         type: 'post',
         data: formData,
         // async: false,
@@ -442,7 +440,7 @@ export default {
             tempThis.historicalData[index].webAttachment2 = tempThis.historicalData[index].webAttachment.map(function (item) {
               let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
               if (name) {
-                return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
+                return { name: name[0].substr(2), url: tempThis.path + '/downattachment?filename=' + name[0].substr(2) }
               }
             })
           } else {
@@ -489,7 +487,7 @@ export default {
       }
       $.ajax({
         type: 'post',
-        url: path + '/delete',
+        url: this.path + '/delete',
         data: this.historicalData[this.deleteIndex],
         async: false,
         success: function (data) {
@@ -520,7 +518,7 @@ export default {
       }
       $.ajax({
         async: false,
-        url: path + '/add',
+        url: this.path + '/add',
         method: 'POST',
         processData: false,
         contentType: false,
@@ -567,7 +565,7 @@ export default {
       }
       $.ajax({
         async: false,
-        url: path + '/add',
+        url: this.path + '/add',
         method: 'POST',
         processData: false,
         contentType: false,
@@ -597,7 +595,7 @@ export default {
       }
       var formData = new FormData(document.getElementById('fileForm2'))
       $.ajax({
-        url: path + '/upload',
+        url: this.path + '/upload',
         type: 'post',
         data: formData,
         async: false,
@@ -606,7 +604,7 @@ export default {
         success: async function (data) {
           let res = JSON.parse(data)
           if (res.result === 'success') {
-            let res2 = await axios.get( path + '/query?page=1&state=0')
+            let res2 = await axios.get( this.path + '/query?page=1&state=0')
             tempThis.templateName = res2.data.data.template
             alert('上传成功!')
           } else {
@@ -681,7 +679,7 @@ export default {
       this.disabledVal = false
     },
     async refresh () {
-      let res = await axios.get(`${path}/query?page=${this.page}&state=${this.state}`)
+      let res = await axios.get(`${this.path}/query?page=${this.page}&state=${this.state}`)
       let data = res.data.data
       this.historicalData = data.yqzc_work_report      
       this.templateName = data.template
@@ -707,9 +705,9 @@ export default {
           this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
             let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
             if (name) {
-              return { name: name[0].substr(2), url: path + '/downattachment?filename=' + item }
+              return { name: name[0].substr(2), url: this.path + '/downattachment?filename=' + item }
             } else {
-                return { name: item, url: path + '/downattachment?filename=' + item }
+                return { name: item, url: this.path + '/downattachment?filename=' + item }
             }
           })        
         }
@@ -746,6 +744,12 @@ export default {
     }
   },
   computed: {
+    ...mapState({
+      path: state => state.path,
+      isLogin: state => state.isLogin,
+      userId: state => state.userId,
+      username: state => state.username
+    }),
     state () {
       return this.conditionItems.indexOf(this.condition)
     }
@@ -766,7 +770,7 @@ export default {
     }
   },
   created: async function () {
-    let res = await axios.get(path + '/query?page=1&state=0')
+    let res = await axios.get(this.path + '/query?page=1&state=0')
     let data = res.data.data
     console.log(data)
     if (data.yqzc_work_report.length === 0) {
@@ -791,9 +795,9 @@ export default {
         this.historicalData[i].webAttachment2 = this.historicalData[i].webAttachment.map(function (item) {
           let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
           if (name) {
-            return { name: name[0].substr(2), url: path + '/downattachment?filename=' + item }
+            return { name: name[0].substr(2), url: this.path + '/downattachment?filename=' + item }
           } else {
-              return { name: item, url: path + '/downattachment?filename=' + item }
+              return { name: item, url: this.path + '/downattachment?filename=' + item }
           }
         })        
       }

@@ -34,7 +34,8 @@ export default {
 </script>
 <style scoped>
 .mainPage{
-  padding-top: 13%;
+  padding-top: 100px;
+  margin-top: 65px;
 }
 .mainBtn{
   width: 100%;

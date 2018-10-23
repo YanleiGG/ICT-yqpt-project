@@ -207,9 +207,8 @@ import axios from 'axios'
 import $ from 'jquery'
 import Vue from 'vue'
 import moment from 'moment'
+import { mapState, mapActions, mapMutations } from 'vuex'
 
-// let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
-let path = 'http://172.22.0.34:8080/yqzc2'
 let temp = ''
 
 export default{
@@ -228,7 +227,6 @@ export default{
             dialog: false,
             deleteIndex: -1,
             submitIndex: -1,
-            path: path,
             listDialog: false,
             submitDialog: false,
             menu1: false,
@@ -244,7 +242,7 @@ export default{
     },
     methods: {
         refresh: async function () {
-            let res = await axios.get(path + '/msm/query?page=' + this.page + '&state=' + this.state)
+            let res = await axios.get(this.path + '/msm/query?page=' + this.page + '&state=' + this.state)
             if (res.data.data.yqzc_meeting_schedule.length === 0) {
                 this.historicalData = []
                 this.totalPage = 1
@@ -385,7 +383,7 @@ export default{
             console.log(this.historicalData[index])
             $.ajax({
                 type: 'post',
-                url: path + '/msm/add',
+                url: this.path + '/msm/add',
                 data: this.historicalData[index],
                 async: false,
                 success: function (data) {
@@ -413,7 +411,7 @@ export default{
             let id = this.historicalData[this.deleteIndex].id
             $.ajax({
                 type: 'post',
-                url: path + '/msm/delete',
+                url: this.path + '/msm/delete',
                 data: { id },
                 async: false,
                 success: function (data) {
@@ -432,7 +430,7 @@ export default{
             let filePath = document.getElementById('fileForm')[0].value
             var formData = new FormData(document.getElementById('fileForm'))
             $.ajax({
-                url: path + '/msm/upload',
+                url: this.path + '/msm/upload',
                 type: 'post',
                 data: formData,
                 async: false,
@@ -471,6 +469,12 @@ export default{
         this.refresh()
     },
     computed: {
+        ...mapState({
+            path: state => state.path,
+            isLogin: state => state.isLogin,
+            userId: state => state.userId,
+            username: state => state.username
+        }),        
         state () {
             return this.conditionItems.indexOf(this.condition)
         }
