@@ -52,7 +52,7 @@
               <v-text-field :disabled="true" label="编辑人" v-model="historicalData[index].editor"></v-text-field>
             </v-flex>
             <v-flex offset-md1>
-              <v-btn :disabled="!isLogin" class="purple white--text" @click="createTable()">新建总结</v-btn>
+              <v-btn class="purple white--text" @click="createTable()">新建总结</v-btn>
               <v-btn class="purple white--text" @click="exportTable(index)">导出</v-btn>
               <a target="_blank" class="export" :href="[path + '/wsm/export?id='+historicalData[index].id]"></a>
             </v-flex>
@@ -78,7 +78,7 @@
               </div>
             </v-flex>
             <v-flex sm2>
-              <div v-for="(work, workIndex) in item.work" :key="workIndex" style="margin-bottom: 15px">
+              <div v-for="(work, workIndex) in item.work" :key="workIndex" style="margin-bottom:15px">
                 <v-btn v-tooltip:top="{ html:'添加'}" @click="addWork(index, index2, workIndex)" :disabled="disabledVal || username != item.name" slot="activator" small icon class="purple--text"><v-icon>add</v-icon></v-btn>
                 <v-btn v-tooltip:top="{ html:'删除'}" @click="deleteWork(index, index2, workIndex)" :disabled="disabledVal || item.work.length === 1 || username != item.name" slot="activator" small icon class="red--text"><v-icon>remove</v-icon></v-btn>
               </div>       
@@ -87,7 +87,7 @@
           <div class="mainBtnGroup">
             <v-btn class="purple white--text" :disabled="disabledVal" @click="save(index)">保存</v-btn>
             <v-btn class="error" :disabled="disabledVal" @click="cancel(index)">取消</v-btn>
-            <v-btn class="purple white--text" :disabled="disabledVal || historicalData[index].editor != username" @click="submit(index)">提交</v-btn>
+            <v-btn class="purple white--text" :disabled="disabledVal" v-if="historicalData[index].editor === username" @click="submit(index)">提交</v-btn>
           </div>  
         </div>                 
       </v-container>
@@ -157,7 +157,8 @@ export default {
     ...mapMutations([
       'set_isLogin',
       'set_userId',
-      'set_username'
+      'set_username',
+      'set_loginDialog'
     ]),
     hisClick (index) {
       this.showIndex = index
@@ -176,6 +177,10 @@ export default {
     },
     editHis (index) {
       this.showIndex = index
+      if (!this.isLogin) {
+        this.set_loginDialog({ loginDialog: true })
+        return
+      }
       this.disabledVal = false
     },
     submitList () {
@@ -267,6 +272,10 @@ export default {
       this.save(this.submitIndex)
     },
     createTable () {
+      if (!this.isLogin) {
+        this.set_loginDialog({ loginDialog: true })
+        return
+      }
       this.ymDisableVal = false
       let tableData = []
       let content = []

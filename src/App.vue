@@ -9,7 +9,7 @@
       <router-link to="/hygl"><v-btn @click="changeClass(3)" class="white--text" :class="colorClass[classIndex]" flat>会议管理</v-btn></router-link>
       <router-link to="/instruction"><v-btn @click="changeClass(0)" class="white--text" :class="colorClass[classIndex]" flat>帮助</v-btn></router-link>
       <v-btn
-        @click="loginDialog = true" 
+        @click="openLoginDialog" 
         class="white--text" 
         :class="colorClass[classIndex]" 
         flat 
@@ -41,7 +41,8 @@
         <v-card-title style="width:70%;margin-left:12%"><span class="headline">登录</span></v-card-title>
         <v-text-field v-model="name" label="账号" style="width:70%;margin-left:15%"></v-text-field>
         <v-text-field v-model="password" label="密码" style="width:70%;margin-left:15%" type="password"></v-text-field>
-        <div style="text-align:right">
+        <div style="width:70%;margin-left:15%;margin-bottom: 10px">注:账户名为用户姓名，初始密码为111.</div>
+        <div style="text-align:center">
           <v-btn @click="login" primary>确认</v-btn>
           <v-btn error @click="cancel">取消</v-btn>
         </div>
@@ -53,7 +54,7 @@
         <v-text-field v-model="oldPassword" label="原密码" style="width:70%;margin-left:15%" type="password"/>
         <v-text-field v-model="newPassword" label="新密码" style="width:70%;margin-left:15%" type="password"/>
         <v-text-field v-model="repeatPassword" label="重复新密码" style="width:70%;margin-left:15%" type="password"/>
-        <div style="text-align:right">
+        <div style="text-align:center">
           <v-btn @click="changePassword" primary>确认</v-btn>
           <v-btn error @click="changePasswordCancel">取消</v-btn>
         </div>
@@ -79,8 +80,7 @@ export default {
       colorClass: ['indigo', 'primary', 'purple', 'success'],
       url: ['instruction', 'ydjb', 'ydzj', 'hygl'],
       classIndex: 0,
-      loginDialog: false,
-      name: '朱晓航',
+      name: '',
       password: '',
       changePasswordDialog: false,
       oldPassword: '',
@@ -92,7 +92,8 @@ export default {
     ...mapMutations([
       'set_isLogin',
       'set_userId',
-      'set_username'
+      'set_username',
+      'set_loginDialog'
     ]),
     changeClass (index) {
       this.classIndex = index
@@ -122,13 +123,16 @@ export default {
         this.set_userId({ userId: temp.data.id })
         this.set_username({ username: temp.data.name })
         console.log(this.username)
-        this.loginDialog = false
+        this.set_loginDialog({loginDialog: false})
       } else {
         alert('账号或密码错误!')
       }
     },
+    openLoginDialog() {
+      this.set_loginDialog({loginDialog: true})
+    },
     cancel() {
-      this.loginDialog = false
+      this.set_loginDialog({loginDialog: false})
       this.password = ''
       this.name = ''
     },
@@ -208,8 +212,16 @@ export default {
       path: state => state.path,
       isLogin: state => state.isLogin,
       userId: state => state.userId,
-      username: state => state.username
+      username: state => state.username,
     }),
+    loginDialog: {
+      get () {
+        return this.$store.state.loginDialog;
+      },
+      set (value) {
+        this.$store.commit('set_loginDialog', value);
+      }
+    },
   }
 }
 </script>
