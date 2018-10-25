@@ -245,6 +245,7 @@ export default {
         this.historicalData[index].content[i].state = stateArr.join('::')
       }
       this.historicalData[index].content = JSON.stringify(this.historicalData[index].content)
+      this.historicalData[index].user = this.username
       $.ajax({
         type: 'post',
         url: this.path + '/wsm/add',
