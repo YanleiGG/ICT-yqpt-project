@@ -105,6 +105,7 @@ export default {
       let formData = new FormData()
       formData.append('name', this.name)
       formData.append('passwd', this.password)
+      console.log(this.name)
       $.ajax({
         type: 'post',
         url: this.path + '/user/verify',

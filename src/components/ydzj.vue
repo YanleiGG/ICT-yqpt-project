@@ -58,14 +58,14 @@
             </v-flex>
           </v-layout>
           <v-layout class="tableHeader">
-            <v-flex sm1>序号</v-flex>
+            <v-flex sm1 style="max-width:50px">序号</v-flex>
             <v-flex sm1>姓名</v-flex>
             <v-flex sm4>工作项目</v-flex>
             <v-flex sm4>完成情况</v-flex>
             <v-flex sm2>操作</v-flex>
           </v-layout>
           <v-layout class="tableItem" v-for="(item, index2) in historicalData[index].tableData" :key="item.num">
-            <v-flex sm1>{{ item.num }}</v-flex>
+            <v-flex sm1 style="max-width:50px">{{ item.num }}</v-flex>
             <v-flex sm1>{{ item.name }}</v-flex>
             <v-flex sm4>
               <div v-for="(work, workIndex) in item.work" :key="workIndex">
@@ -259,6 +259,7 @@ export default {
         this.historicalData[index].id = temp.data.id
         this.disabledVal = true
         temp = ''
+        this.refresh()
       } else {
         temp = ''
         alert('操作失败，请再次尝试!')
@@ -283,10 +284,10 @@ export default {
       for (let i = 0;i < this.nameArr.length;i++) {
         tableData.push({
           num: i + 1,
-          name: this.nameArr[i],
+          name: this.nameArr[i].replace(/\s+/, ''),
           work: [{ content: '', state: '' }]
         })
-        content.push({ name: this.nameArr[i], project: '', state: ''})
+        content.push({ name: this.nameArr[i].replace(/\s+/, ''), project: '', state: ''})
       }
       this.historicalData.unshift({
         cyear: '',
@@ -328,7 +329,7 @@ export default {
               }
               tableData.push({
                 num: k + 1,
-                name: table[k].name,
+                name: table[k].name.replace(/\s+/, ''),
                 work: work
               }) 
             }
@@ -379,7 +380,7 @@ export default {
           }
           tableData.push({
             num: k + 1,
-            name: table[k].name,
+            name: table[k].name.replace(/\s+/, ''),
             work: work
           }) 
         }
