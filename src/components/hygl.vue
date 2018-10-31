@@ -249,7 +249,7 @@ export default{
                 this.createTable()
                 return
             }
-            this.totalPage = Math.ceil(res.data.data.count / 10)
+            this.totalPage = Math.ceil(res.data.data.count / 8)
             this.historicalData = res.data.data.yqzc_meeting_schedule
             for (let i = 0; i < this.historicalData.length; i++) {
                 this.historicalData[i].content = JSON.parse(this.historicalData[i].content)

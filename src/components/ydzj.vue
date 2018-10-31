@@ -195,7 +195,7 @@ export default {
       }
       var formData = new FormData(document.getElementById('fileForm'))
       $.ajax({
-        url: this.path + '/wsm/updatalist',
+        url: tempThis.path + '/wsm/updatalist',
         type: 'post',
         data: formData,
         async: false,
@@ -359,7 +359,7 @@ export default {
       let res = await axios.get(this.path + '/wsm/query?page=' + this.page + '&state=' + this.state)  
       this.nameArr = res.data.data.name_list.split('::')
       let dataArr = res.data.data.yqzc_work_summary
-      this.totalPage = Math.ceil(res.data.data.count / 10)
+      this.totalPage = Math.ceil(res.data.data.count / 8)
       this.historicalData = dataArr
       let tableData = []
       for (let i = 0; i < dataArr.length; i++) {

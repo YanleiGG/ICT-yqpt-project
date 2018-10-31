@@ -334,7 +334,7 @@ export default {
       let tempThis = this
       setTimeout(async function () {
         if (tempThis.historicalData[tempThis.showIndex].journel_month) {
-          let res = await axios.get(`${this.path}/verify?year=${tempThis.historicalData[index].current_year}&month=${tempThis.historicalData[index].journel_month}`)
+          let res = await axios.get(`${tempThis.path}/verify?year=${tempThis.historicalData[index].current_year}&month=${tempThis.historicalData[index].journel_month}`)
           let data = res.data.data
           if (data.yqzc_work_report) {
             tempThis.historicalData[tempThis.showIndex] = data.yqzc_work_report
@@ -346,9 +346,21 @@ export default {
             tempThis.historicalData[tempThis.showIndex].webAttachment2 = tempThis.historicalData[tempThis.showIndex].webAttachment.map(function (item) {
               let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
               if (name) {
-                return { name: name[0].substr(2), url: this.path + '/downattachment?filename=' + name[0].substr(2) }
+                return { name: name[0].substr(2), url: tempThis.path + '/downattachment?filename=' + name[0].substr(2) }
               }
             })
+            for (let i = 0;i < data.yqzc_work_report.length;i++) {
+              if (!data.yqzc_work_report[i].wxb_zxjc) {
+                this.historicalData[i].wxb_zxjc_arr = [{ name: '', count: '' }]
+              } else {
+                this.historicalData[i].wxb_zxjc_arr = []
+                data.yqzc_work_report[i].wxb_zxjc.split(';').forEach(item => {
+                  if (item != '') {
+                    this.historicalData[i].wxb_zxjc_arr.push({ name: item.split("::")[0], count: item.split("::")[1] })
+                  }
+                })
+              }              
+            }
             tempThis.historicalData[tempThis.showIndex].nextAttention = data.yqzc_work_report.next_attention.split('::')
             tempThis.historicalData[tempThis.showIndex].title = data.yqzc_work_report.current_year + ' 年' + data.yqzc_work_report.journel_month + ' 月'
             let tempIndex = tempThis.showIndex
@@ -427,7 +439,7 @@ export default {
       let tempThis = this
       let formData = new FormData(document.getElementById('fileForm'))
       $.ajax({
-        url: this.path + '/upload',
+        url: tempThis.path + '/upload',
         type: 'post',
         data: formData,
         // async: false,
@@ -509,9 +521,11 @@ export default {
       this.historicalData[index].next_attention = this.historicalData[index].nextAttention.join('::')
       this.historicalData[index].attachment = this.historicalData[index].webAttachment.join('::')
       this.historicalData[index].wxb_zxjc = ''
-      this.historicalData[index].wxb_zxjc_arr.forEach(item => {
-        this.historicalData[index].wxb_zxjc += item.name + "::" + item.count + ';'
-      })
+      if (this.historicalData[index].wxb_zxjc_arr) {
+        this.historicalData[index].wxb_zxjc_arr.forEach(item => {
+          this.historicalData[index].wxb_zxjc += item.name + "::" + item.count + ';'
+        })
+      }
       let formData = new FormData()
       for (var i in this.historicalData[index]) {
         if (this.historicalData[index][i] !== null && this.historicalData[index][i] !== 'null') formData.append(i.toString(), this.historicalData[index][i].toString())
@@ -604,7 +618,7 @@ export default {
         success: async function (data) {
           let res = JSON.parse(data)
           if (res.result === 'success') {
-            let res2 = await axios.get( this.path + '/query?page=1&state=0')
+            let res2 = await axios.get( tempThis.path + '/query?page=1&state=0')
             tempThis.templateName = res2.data.data.template
             alert('上传成功!')
           } else {
@@ -683,7 +697,7 @@ export default {
       let data = res.data.data
       this.historicalData = data.yqzc_work_report      
       this.templateName = data.template
-      this.totalPage = Math.ceil(data.count / 10)
+      this.totalPage = Math.ceil(data.count / 8)
       if (data.yqzc_work_report.length === 0) {
         this.historicalData = []
         this.totalPage = 1
@@ -720,7 +734,7 @@ export default {
               this.historicalData[i].wxb_zxjc_arr.push({ name: item.split("::")[0], count: item.split("::")[1] })
             }
           })
-        }        
+        }      
         if ( data.yqzc_work_report[i].next_attention === null ) this.historicalData[i].next_attention = ''
         this.historicalData[i].nextAttention = data.yqzc_work_report[i].next_attention.split('::')
         this.historicalData[i].title = data.yqzc_work_report[i].current_year + ' 年 ' + data.yqzc_work_report[i].journel_month + ' 月'
@@ -779,7 +793,7 @@ export default {
     }
     this.templateName = data.template
     this.historicalData = data.yqzc_work_report
-    this.totalPage = Math.ceil(data.count / 10)
+    this.totalPage = Math.ceil(data.count / 8)
     for (let i = 0; i < data.yqzc_work_report.length; i++) {
       Vue.set(this.historicalData[i], 'title', '')
       Vue.set(this.historicalData[i], 'nextAttention', '')
