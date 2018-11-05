@@ -130,6 +130,8 @@ import Vue from 'vue'
 import { mapState, mapActions, mapMutations } from 'vuex'
 
 let temp = ''
+let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
+// let path = 'http://172.22.0.34:8080/yqzc2'
 
 export default {
   data () {
@@ -150,7 +152,8 @@ export default {
       submitIndex: -1,
       nameArr: [],
       listDialog: false,
-      submitDialog: false
+      submitDialog: false,
+      path
     }
   },
   methods: {
@@ -195,7 +198,7 @@ export default {
       }
       var formData = new FormData(document.getElementById('fileForm'))
       $.ajax({
-        url: tempThis.path + '/wsm/updatalist',
+        url: path + '/wsm/updatalist',
         type: 'post',
         data: formData,
         async: false,
@@ -209,7 +212,7 @@ export default {
             tempThis.showIndex = 0
             tempThis.refresh()
             alert('上传成功!')
-            let res = await axios.get(tempThis.path + '/user/initLogin')
+            let res = await axios.get(path + '/user/initLogin')
           } else {
             alert('上传失败!')
           }
@@ -248,7 +251,7 @@ export default {
       this.historicalData[index].user = this.username
       $.ajax({
         type: 'post',
-        url: this.path + '/wsm/add',
+        url: path + '/wsm/add',
         data: this.historicalData[index],
         async: false,
         success: function (data) {
@@ -307,7 +310,7 @@ export default {
         let year = tempThis.historicalData[index].cyear
         let month = tempThis.historicalData[index].cmonth
         if (year !== '' && month !== '') {
-          let res = await axios.get(tempThis.path + '/wsm/verify?year='+ year +'&month='+ month)
+          let res = await axios.get(path + '/wsm/verify?year='+ year +'&month='+ month)
           if (res.data.data.yqzc_work_summary) {
             tempThis.historicalData[0] = res.data.data.yqzc_work_summary
             tempThis.ymDisableVal = true
@@ -345,7 +348,7 @@ export default {
       let id = this.historicalData[this.deleteIndex].id
       $.ajax({
         type: 'post',
-        url: this.path + '/wsm/delete',
+        url: path + '/wsm/delete',
         data: { id },
         async: false,
         success: function (data) {
@@ -356,7 +359,7 @@ export default {
       this.refresh()
     },
     async refresh () {
-      let res = await axios.get(this.path + '/wsm/query?page=' + this.page + '&state=' + this.state)  
+      let res = await axios.get(path + '/wsm/query?page=' + this.page + '&state=' + this.state)  
       this.nameArr = res.data.data.name_list.split('::')
       let dataArr = res.data.data.yqzc_work_summary
       this.totalPage = Math.ceil(res.data.data.count / 8)
@@ -402,7 +405,6 @@ export default {
   },
   computed: {
     ...mapState({
-      path: state => state.path,
       isLogin: state => state.isLogin,
       userId: state => state.userId,
       username: state => state.username

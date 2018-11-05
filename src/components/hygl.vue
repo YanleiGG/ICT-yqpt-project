@@ -210,6 +210,8 @@ import moment from 'moment'
 import { mapState, mapActions, mapMutations } from 'vuex'
 
 let temp = ''
+let path = window.document.location.href.match(/(http:\/\/).*?\/||(https:\/\/).*?\//)[0] + 'yqzc2'
+// let path = 'http://172.22.0.34:8080/yqzc2'
 
 export default{
     data () {
@@ -242,7 +244,7 @@ export default{
     },
     methods: {
         refresh: async function () {
-            let res = await axios.get(this.path + '/msm/query?page=' + this.page + '&state=' + this.state)
+            let res = await axios.get(path + '/msm/query?page=' + this.page + '&state=' + this.state)
             if (res.data.data.yqzc_meeting_schedule.length === 0) {
                 this.historicalData = []
                 this.totalPage = 1
@@ -383,7 +385,7 @@ export default{
             console.log(this.historicalData[index])
             $.ajax({
                 type: 'post',
-                url: this.path + '/msm/add',
+                url: path + '/msm/add',
                 data: this.historicalData[index],
                 async: false,
                 success: function (data) {
@@ -411,7 +413,7 @@ export default{
             let id = this.historicalData[this.deleteIndex].id
             $.ajax({
                 type: 'post',
-                url: this.path + '/msm/delete',
+                url: path + '/msm/delete',
                 data: { id },
                 async: false,
                 success: function (data) {
@@ -430,7 +432,7 @@ export default{
             let filePath = document.getElementById('fileForm')[0].value
             var formData = new FormData(document.getElementById('fileForm'))
             $.ajax({
-                url: this.path + '/msm/upload',
+                url: path + '/msm/upload',
                 type: 'post',
                 data: formData,
                 async: false,
@@ -470,7 +472,6 @@ export default{
     },
     computed: {
         ...mapState({
-            path: state => state.path,
             isLogin: state => state.isLogin,
             userId: state => state.userId,
             username: state => state.username
