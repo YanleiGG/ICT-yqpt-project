@@ -325,7 +325,8 @@ export default {
       templateName: '',
       deleteIndex: -1,
       submitIndex: -1,
-      submitBtnDisabled: false
+      submitBtnDisabled: false,
+      path
     }
   },
   methods: {
@@ -335,16 +336,19 @@ export default {
     yearMonthChange (index) {
       let tempThis = this
       setTimeout(async function () {
-        if (tempThis.historicalData[tempThis.showIndex].journel_month) {
-          let res = await axios.get(`${path}/verify?year=${tempThis.historicalData[index].current_year}&month=${tempThis.historicalData[index].journel_month}`)
+        let journel_month = tempThis.historicalData[tempThis.showIndex].journel_month
+        if (journel_month) {
+          let current_year = tempThis.historicalData[index].current_year
+          let res = await axios.get(`${path}/verify?year=${current_year}&month=${journel_month}`)
           let data = res.data.data
-          tempThis.historicalData[tempThis.showIndex].title = data.yqzc_work_report.current_year + ' 年' + data.yqzc_work_report.journel_month + ' 月'
           if (data.yqzc_work_report) {
-            tempThis.historicalData[tempThis.showIndex] = data.yqzc_work_report
+            tempThis.disabledVal = data.yqzc_work_report.is_submit
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'title', '')
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'nextAttention', '')
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'webAttachment', '')
             Vue.set(tempThis.historicalData[tempThis.showIndex], 'webAttachment2', '')
+            tempThis.historicalData[tempThis.showIndex] = data.yqzc_work_report 
+            tempThis.historicalData[tempThis.showIndex].title = current_year + ' 年' + journel_month + ' 月'
             tempThis.historicalData[tempThis.showIndex].webAttachment = data.yqzc_work_report.attachment.split('::')
             tempThis.historicalData[tempThis.showIndex].webAttachment2 = tempThis.historicalData[tempThis.showIndex].webAttachment.map(function (item) {
               let name = item.match(/\d(_.+\.doc|_.+\.docx|_.+\.ppt|_.+\.pptx)$/)
@@ -352,18 +356,16 @@ export default {
                 return { name: name[0].substr(2), url: path + '/downattachment?filename=' + name[0].substr(2) }
               }
             })
-            for (let i = 0;i < data.yqzc_work_report.length;i++) {
-              if (!data.yqzc_work_report[i].wxb_zxjc) {
-                this.historicalData[i].wxb_zxjc_arr = [{ name: '', count: '' }]
-              } else {
-                this.historicalData[i].wxb_zxjc_arr = []
-                data.yqzc_work_report[i].wxb_zxjc.split(';').forEach(item => {
-                  if (item != '') {
-                    this.historicalData[i].wxb_zxjc_arr.push({ name: item.split("::")[0], count: item.split("::")[1] })
-                  }
-                })
-              }              
-            }
+            if (!data.yqzc_work_report.wxb_zxjc) {
+              tempThis.historicalData[tempThis.showIndex].wxb_zxjc_arr = [{ name: '', count: '' }]
+            } else {
+              tempThis.historicalData[tempThis.showIndex].wxb_zxjc_arr = []
+              data.yqzc_work_report.wxb_zxjc.split(';').forEach(item => {
+                if (item != '') {
+                  tempThis.historicalData[tempThis.showIndex].wxb_zxjc_arr.push({ name: item.split("::")[0], count: item.split("::")[1] })
+                }
+              })
+            }   
             tempThis.historicalData[tempThis.showIndex].nextAttention = data.yqzc_work_report.next_attention.split('::')
             let tempIndex = tempThis.showIndex
             tempThis.showIndex = -1

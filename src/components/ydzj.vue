@@ -313,6 +313,7 @@ export default {
           let res = await axios.get(path + '/wsm/verify?year='+ year +'&month='+ month)
           if (res.data.data.yqzc_work_summary) {
             tempThis.historicalData[0] = res.data.data.yqzc_work_summary
+            tempThis.disabledVal = res.data.data.yqzc_work_summary.is_submit
             tempThis.ymDisableVal = true
             let tableData = []
             let table = JSON.parse(res.data.data.yqzc_work_summary.content)
